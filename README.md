@@ -1,2 +1,2 @@
 # VirtualGym
-Software para administração de academia de ginástica.
+Gym management system, developed in the programming language discipline. Contributors: @VitorHugoIF @wesleirocha13, @codecarlos96

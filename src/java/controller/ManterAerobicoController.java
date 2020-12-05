@@ -5,7 +5,6 @@
  */
 package controller;
 
-import exception.TraduzirExcecao;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.text.ParseException;
@@ -49,23 +48,23 @@ public class ManterAerobicoController extends HttpServlet {
             }
         }
     }
-    
+
     public void prepararOperacao(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, ClassNotFoundException, SQLException {
         try {
             String operacao = request.getParameter("operacao");
-            int idFichaTreino = Integer.parseInt(request.getParameter("idFichaTreino"));
-            
+            Integer idFichaTreino = Integer.parseInt(request.getParameter("idFichaTreino"));
+
             request.setAttribute("operacao", operacao);
             request.setAttribute("fichaTreino", FichaTreino.obterFichaTreino(idFichaTreino));
             request.setAttribute("exercicios", Exercicio.obterExerciciosAerobicos());
             request.setAttribute("ordem", Aerobico.obterOrdem(idFichaTreino));
-            
+
             if (!operacao.equals("Incluir")) {
-                int idAerobico = Integer.parseInt(request.getParameter("idAerobico"));
+                Integer idAerobico = Integer.parseInt(request.getParameter("idAerobico"));
                 Aerobico aerobico = Aerobico.obterAerobico(idAerobico);
                 request.setAttribute("aerobico", aerobico);
             }
-            
+
             RequestDispatcher view = request.getRequestDispatcher("/cadastrarAerobico.jsp");
             view.forward(request, response);
         } catch (ServletException e) {
@@ -124,65 +123,34 @@ public class ManterAerobicoController extends HttpServlet {
 
     private void confirmarOperacao(HttpServletRequest request, HttpServletResponse response) throws SQLException, ParseException, ServletException, IOException, ClassNotFoundException {
         String operacao = request.getParameter("operacao");
-        int idFichaTreino = Integer.parseInt(request.getParameter("idFichaTreino"));
-        int idAerobico = operacao.equals("Incluir") ? 0 : Integer.parseInt(request.getParameter("idAerobico"));
-        
+        Integer idFichaTreino = Integer.parseInt(request.getParameter("idFichaTreino"));
+        Integer idAerobico = operacao.equals("Incluir") ? null : Integer.parseInt(request.getParameter("idAerobico"));
+
         int tempo = Integer.parseInt(request.getParameter("txtTempo"));
         int distancia = Integer.parseInt(request.getParameter("txtDistancia"));
         int ordem = operacao.equals("Excluir") ? 0 : Integer.parseInt(request.getParameter("optOrdem"));
-        int idExercicio = operacao.equals("Excluir") ? 0 : Integer.parseInt(request.getParameter("optNome"));
-        
+        Integer idExercicio = operacao.equals("Excluir") ? null : Integer.parseInt(request.getParameter("optNome"));
+
         try {
-            FichaTreino fichaTreino = null;
-            Exercicio exercicio = null;
-            if (idExercicio != 0) {
-                exercicio = Exercicio.obterExercicio(idExercicio);
-            }
-            if (idFichaTreino != 0) {
-                fichaTreino = FichaTreino.obterFichaTreino(idFichaTreino);
+            FichaTreino fichaTreino = FichaTreino.obterFichaTreino(idFichaTreino);
+            Exercicio exercicio = Exercicio.obterExercicio(idExercicio);
+            if (operacao.equals("Incluir")) {
                 request.setAttribute("idFichaTreino", idFichaTreino);
             }
-            
-            Aerobico aerobico = new Aerobico(ordem, tempo, distancia, fichaTreino, exercicio) {
-            };
-            if (operacao.equals("Incluir")) {
-                aerobico.gravar();
+
+            Aerobico aerobico = new Aerobico(idAerobico, ordem, tempo, distancia, fichaTreino, exercicio);
+
+            if (operacao.equals("Excluir")) {
+                aerobico.excluir();
             } else {
-                aerobico.setIdAerobico(idAerobico);
-                if (operacao.equals("Editar")) {
-                    aerobico.editar();
-                }
-                if (operacao.equals("Excluir")) {
-                    aerobico.excluir();
-                }
+                aerobico.gravar();
             }
-            
+
             RequestDispatcher view = request.getRequestDispatcher("PesquisaExercicioFichaController");
             view.forward(request, response);
-        } catch (com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException ex) {
-            Aerobico aerobico;
-            if (!operacao.equals("Excluir")) {
-                Exercicio exercicio = Exercicio.obterExercicio(idExercicio);
-                FichaTreino fichaTreino = FichaTreino.obterFichaTreino(idFichaTreino);
-                aerobico = new Aerobico(ordem, tempo, distancia, fichaTreino, exercicio) {
-                };
-            } else {
-                aerobico = Aerobico.obterAerobico(idAerobico);
-            }
-            
-            request.setAttribute("operacao", operacao);
-            request.setAttribute("fichaTreino", FichaTreino.obterFichaTreino(idFichaTreino));
-            request.setAttribute("exercicios", Exercicio.obterExerciciosAerobicos());
-            request.setAttribute("ordem", Aerobico.obterOrdem(idFichaTreino));
-            request.setAttribute("aerobico", aerobico);
-            request.setAttribute("erro", "Erro: " + TraduzirExcecao.ex(ex.getMessage()));
-            
-            RequestDispatcher view = request.getRequestDispatcher("/cadastrarAerobico.jsp");
-            view.forward(request, response);
-            
-        } catch (ServletException | IOException | SQLException | ClassNotFoundException ex) {
+        } catch (ServletException | IOException ex) {
             Logger.getLogger(ManterAerobicoController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
 }

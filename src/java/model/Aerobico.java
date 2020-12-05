@@ -1,22 +1,38 @@
 package model;
 
 import dao.AerobicoDAO;
-import java.sql.SQLException;
+import java.io.Serializable;
 import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.EntityManager;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
 
-public class Aerobico {
+@Entity
+@Table(name = "Aerobico")
+public class Aerobico implements Serializable {
 
-    private int idAerobico;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer idAerobico;
     private int ordem;
     private int tempo;
     private int distancia;
 
+    @OneToOne
     private FichaTreino fichaTreino;
-    private int idFichaTreino;
+    @ManyToOne
     private Exercicio exercicio;
-    private int idExercicio;
 
-    public Aerobico(int ordem, int tempo, int distancia, FichaTreino fichaTreino, Exercicio exercicio) {
+    public Aerobico() {
+    }
+
+    public Aerobico(Integer idAerobico, int ordem, int tempo, int distancia, FichaTreino fichaTreino, Exercicio exercicio) {
+        this.idAerobico = idAerobico;
         this.ordem = ordem;
         this.tempo = tempo;
         this.distancia = distancia;
@@ -24,11 +40,11 @@ public class Aerobico {
         this.exercicio = exercicio;
     }
 
-    public int getIdAerobico() {
+    public Integer getIdAerobico() {
         return idAerobico;
     }
 
-    public void setIdAerobico(int idAerobico) {
+    public void setIdAerobico(Integer idAerobico) {
         this.idAerobico = idAerobico;
     }
 
@@ -56,65 +72,43 @@ public class Aerobico {
         this.distancia = distancia;
     }
 
-    public FichaTreino getFichaTreino() throws ClassNotFoundException, SQLException {
-        if ((this.idFichaTreino != 0) && (this.fichaTreino == null)) {
-            this.fichaTreino = FichaTreino.obterFichaTreino(this.idFichaTreino);
-        }
-        return this.fichaTreino;
+    public FichaTreino getFichaTreino() {
+        return fichaTreino;
     }
 
     public void setFichaTreino(FichaTreino fichaTreino) {
         this.fichaTreino = fichaTreino;
     }
 
-    public int getIdFichaTreino() {
-        return idFichaTreino;
-    }
-
-    public void setIdFichaTreino(int idFichaTreino) {
-        this.idFichaTreino = idFichaTreino;
-    }
-
-    public Exercicio getExercicio() throws ClassNotFoundException, SQLException {
-        if ((this.idExercicio != 0) && (this.exercicio == null)) {
-            this.exercicio = Exercicio.obterExercicio(this.idExercicio);
-        }
-        return this.exercicio;
+    public Exercicio getExercicio() {
+        return exercicio;
     }
 
     public void setExercicio(Exercicio exercicio) {
         this.exercicio = exercicio;
     }
-
-    public int getIdExercicio() {
-        return idExercicio;
+    
+    public static int obterOrdem(Integer idFichaTreino) {
+        return AerobicoDAO.getInstancia().obterOrdem(idFichaTreino);
     }
 
-    public void setIdExercicio(int idExercicio) {
-        this.idExercicio = idExercicio;
+    public static Aerobico obterAerobico(Integer idAerobico) {
+        return AerobicoDAO.getInstancia().obterAerobico(idAerobico);
+    }
+
+    public static List<Aerobico> obterAerobicos(Integer idFichaTreino) {
+        return AerobicoDAO.getInstancia().obterAerobicos(idFichaTreino);
+    }
+
+    public Aerobico gravar() {
+        return AerobicoDAO.getInstancia().gravar(this);
+    }
+
+    public Aerobico excluir() {
+        return AerobicoDAO.getInstancia().excluir(this.idAerobico);
     }
     
-    public static int obterOrdem(int idFichaTreino) throws ClassNotFoundException, SQLException {
-        return AerobicoDAO.obterOrdem(idFichaTreino);
-    }
-
-    public static Aerobico obterAerobico(int idAerobico) throws ClassNotFoundException, SQLException {
-        return AerobicoDAO.obterAerobico(idAerobico);
-    }
-
-    public static List<Aerobico> obterAerobicos(int idFichaTreino) throws ClassNotFoundException, SQLException {
-        return AerobicoDAO.obterAerobicos(idFichaTreino);
-    }
-
-    public void gravar() throws SQLException, ClassNotFoundException {
-        AerobicoDAO.gravar(this);
-    }
-
-    public void editar() throws SQLException, ClassNotFoundException {
-        AerobicoDAO.editar(this);
-    }
-
-    public void excluir() throws SQLException, ClassNotFoundException {
-        AerobicoDAO.excluir(this);
+    public static void excluirExerciciosFicha(FichaTreino fichaTreino, EntityManager em) throws Exception{
+        AerobicoDAO.getInstancia().excluirExerciciosFicha(fichaTreino, em);
     }
 }

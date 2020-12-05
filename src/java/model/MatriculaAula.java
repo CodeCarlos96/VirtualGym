@@ -1,31 +1,36 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package model;
 
 import dao.MatriculaAulaDAO;
-import java.sql.SQLException;
-import java.util.Date;
+import java.io.Serializable;
+import java.sql.Date;
 import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.EntityManager;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
-/**
- *
- * @author Aluno
- */
-public class MatriculaAula {
+@Entity
+@Table(name = "MatriculaAula")
+public class MatriculaAula implements Serializable {
 
-    private int idMatriculaAula;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer idMatriculaAula;
     private Date dataMatricula;
     private int diaVencimento;
-
+    @ManyToOne
     private Aluno aluno;
-    private int idAluno;
+    @ManyToOne
     private Turma turma;
-    private int idTurma;
 
-    public MatriculaAula(int idMatriculaAula, Date dataMatricula, int diaVencimento, Aluno aluno, Turma turma) {
+    public MatriculaAula() {
+    }
+
+    public MatriculaAula(Integer idMatriculaAula, Date dataMatricula, int diaVencimento, Aluno aluno, Turma turma) {
         this.idMatriculaAula = idMatriculaAula;
         this.dataMatricula = dataMatricula;
         this.diaVencimento = diaVencimento;
@@ -33,11 +38,11 @@ public class MatriculaAula {
         this.turma = turma;
     }
 
-    public int getIdMatriculaAula() {
+    public Integer getIdMatriculaAula() {
         return idMatriculaAula;
     }
 
-    public void setIdMatriculaAula(int idMatriculaAula) {
+    public void setIdMatriculaAula(Integer idMatriculaAula) {
         this.idMatriculaAula = idMatriculaAula;
     }
 
@@ -57,69 +62,47 @@ public class MatriculaAula {
         this.diaVencimento = diaVencimento;
     }
 
-    public Aluno getAluno() throws ClassNotFoundException, SQLException {
-        if ((this.idAluno != 0) && (this.aluno == null)) {
-            this.aluno = Aluno.obterAluno(this.idAluno);
-        }
-        return this.aluno;
+    public Aluno getAluno() {
+        return aluno;
     }
 
     public void setAluno(Aluno aluno) {
         this.aluno = aluno;
     }
 
-    public int getIdAluno() {
-        return idAluno;
-    }
-
-    public void setIdAluno(int idAluno) {
-        this.idAluno = idAluno;
-    }
-
-    public Turma getTurma() throws ClassNotFoundException, SQLException {
-        if ((this.idTurma != 0) && (this.turma == null)) {
-            this.turma = Turma.obterTurma(this.idTurma);
-        }
-        return this.turma;
+    public Turma getTurma() {
+        return turma;
     }
 
     public void setTurma(Turma turma) {
         this.turma = turma;
     }
 
-    public int getIdTurma() {
-        return idTurma;
-    }
-
-    public void setIdTurma(int idTurma) {
-        this.idTurma = idTurma;
-    }
-
-    public static int getMatriculados(int idTurma) throws ClassNotFoundException, SQLException {
+    public static int getMatriculados(Integer idTurma) {
         return MatriculaAulaDAO.getMatriculados(idTurma);
     }
 
-    public static boolean matriculado(int idAluno, int idTurma) throws ClassNotFoundException, SQLException {
+    public static boolean matriculado(Integer idAluno, Integer idTurma) {
         return MatriculaAulaDAO.matriculado(idAluno, idTurma);
     }
 
-    public static MatriculaAula obterMatriculaAula(int idMatriculaAula) throws ClassNotFoundException, SQLException {
-        return MatriculaAulaDAO.obterMatriculaAula(idMatriculaAula);
+    public static MatriculaAula obterMatriculaAula(Integer idMatriculaAula) {
+        return MatriculaAulaDAO.getInstancia().obterMatriculaAula(idMatriculaAula);
     }
 
-    public static List<MatriculaAula> obterMatriculasAula() throws ClassNotFoundException, SQLException {
-        return MatriculaAulaDAO.obterMatriculasAula();
+    public static List<MatriculaAula> obterMatriculasAula() {
+        return MatriculaAulaDAO.getInstancia().obterMatriculaAulas();
     }
 
-    public void gravar() throws SQLException, ClassNotFoundException {
-        MatriculaAulaDAO.gravar(this);
+    public MatriculaAula gravar() {
+        return MatriculaAulaDAO.getInstancia().gravar(this);
     }
 
-    public void editar() throws SQLException, ClassNotFoundException {
-        MatriculaAulaDAO.editar(this);
+    public MatriculaAula excluir() {
+        return MatriculaAulaDAO.getInstancia().excluir(this.idMatriculaAula);
     }
-
-    public void excluir() throws SQLException, ClassNotFoundException {
-        MatriculaAulaDAO.excluir(this);
+    
+    public static void excluirMatriculaTurma(Turma turma, EntityManager em) throws Exception {
+        MatriculaAulaDAO.getInstancia().excluirMatriculaTurma(turma, em);
     }
 }

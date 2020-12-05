@@ -7,13 +7,13 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>JSP Page</title>
+        <title>Virtual Gym - Aulas</title>
     </head>
     <body>
         <form>
             <button type="submit" formaction="index.jsp">Menu</button>
         </form>
-        <h1>Pesquisa de Aulas</h1>
+        <h1>Aulas</h1>
 
         <table border=1>
             <tr>

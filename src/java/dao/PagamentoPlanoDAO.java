@@ -1,135 +1,79 @@
 package dao;
 
-import static dao.DAO.fecharConexao;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Types;
-import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.EntityManager;
 import model.PagamentoPlano;
 
 public class PagamentoPlanoDAO {
-    public static void gravar(PagamentoPlano pagamentoPlano) throws SQLException, ClassNotFoundException {
-        Connection conexao = null;
-        PreparedStatement comando = null;
 
+    private static PagamentoPlanoDAO instancia = new PagamentoPlanoDAO();
+
+    private PagamentoPlanoDAO() {
+    }
+
+    public static PagamentoPlanoDAO getInstancia() {
+        return instancia;
+    }
+
+    public PagamentoPlano gravar(PagamentoPlano pagamentoPlano) {
+        EntityManager em = new ConexaoFactory().getConexao();
         try {
-            conexao = BD.getConexao();
-            comando = conexao.prepareStatement(
-                    "insert into PagamentoPlano (idPagamentoPlano, Pagamento_idPagamento, MatriculaAcademia_idMatriculaAcademia)"
-                    + " values (?, ?, ?)"
-            );
-            comando.setInt(1, pagamentoPlano.getIdPagamentoPlano());
-            comando.setInt(2, pagamentoPlano.getIdPagamento());
-
-            if (pagamentoPlano.getMatriculaAcademia() == null) {
-                comando.setNull(3, Types.INTEGER);
+            em.getTransaction().begin();
+            if (pagamentoPlano.getIdPagamentoPlano() == null) {
+                em.persist(pagamentoPlano);
             } else {
-                comando.setInt(3, pagamentoPlano.getMatriculaAcademia().getIdMatriculaAcademia());
+                em.merge(pagamentoPlano);
             }
-
-            comando.executeUpdate();
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+            System.err.println(e);
         } finally {
-            fecharConexao(conexao, comando);
-        }
-    }
-    
-    public static void editar(PagamentoPlano pagamentoPlano) throws SQLException, ClassNotFoundException {
-        Connection conexao = null;
-        PreparedStatement comando = null;
-
-        try {
-            conexao = BD.getConexao();
-            comando = conexao.prepareStatement(
-                    "update PagamentoPlano set Pagamento_idPagamento=?, MatriculaAcademia_idMatriculaAcademia=? where idPagamentoPlano=?"
-            );
-            comando.setInt(1, pagamentoPlano.getIdPagamento());
-
-            if (pagamentoPlano.getMatriculaAcademia() == null) {
-                comando.setNull(2, Types.INTEGER);
-            } else {
-                comando.setInt(2, pagamentoPlano.getMatriculaAcademia().getIdMatriculaAcademia());
-            }
-            comando.setInt(3, pagamentoPlano.getIdPagamentoPlano());
-
-            comando.executeUpdate();
-        } finally {
-            fecharConexao(conexao, comando);
-        }
-    }
-    
-    public static void excluir(PagamentoPlano pagamentoPlano) throws SQLException, ClassNotFoundException {
-        Connection conexao = null;
-        Statement comando = null;
-        String stringSQL;
-        try {
-            conexao = BD.getConexao();
-            comando = conexao.createStatement();
-            
-            stringSQL = "delete from PagamentoPlano where idPagamentoPlano = "+pagamentoPlano.getIdPagamentoPlano();
-            comando.execute(stringSQL);
-            
-            stringSQL = "delete from Pagamento where idPagamento = "+pagamentoPlano.getIdPagamento();
-            comando.execute(stringSQL);
-        } finally {
-            fecharConexao(conexao, comando);
-        }
-    }
-
-    public static PagamentoPlano obterPagamentoPlano(int idPagamentoPlano) throws ClassNotFoundException, SQLException {
-        Connection conexao = null;
-        Statement comando = null;
-        PagamentoPlano pagamentoPlano = null;
-        try {
-            conexao = BD.getConexao();
-            comando = conexao.createStatement();
-            ResultSet rs = comando.executeQuery("select * from pagamentoPlano"
-                    + " join pagamento on pagamentoPlano.Pagamento_idPagamento = pagamento.idPagamento where idPagamentoPlano = " + idPagamentoPlano);
-            rs.first();
-            pagamentoPlano = instanciarPagamentoPlano(rs);
-        } finally {
-            fecharConexao(conexao, comando);
+            em.close();
         }
         return pagamentoPlano;
     }
 
-    public static List<PagamentoPlano> obterPagamentoPlanos()
-            throws ClassNotFoundException, SQLException {
-        Connection conexao = null;
-        Statement comando = null;
-        List<PagamentoPlano> pagamentoPlanos = new ArrayList<PagamentoPlano>();
+    public PagamentoPlano excluir(Integer idPagamentoPlano) {
+        EntityManager em = new ConexaoFactory().getConexao();
         PagamentoPlano pagamentoPlano = null;
         try {
-            conexao = BD.getConexao();
-            comando = conexao.createStatement();
-            ResultSet rs = comando.executeQuery("select * from PagamentoPlano"
-                    + " join pagamento on pagamentoPlano.Pagamento_idPagamento = pagamento.idPagamento");
-            
-            while (rs.next()) {
-                pagamentoPlano = instanciarPagamentoPlano(rs);
-                pagamentoPlanos.add(pagamentoPlano);
-            }
+            pagamentoPlano = em.find(PagamentoPlano.class, idPagamentoPlano);
+            em.getTransaction().begin();
+            em.remove(pagamentoPlano);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+            System.err.println(e);
         } finally {
-            fecharConexao(conexao, comando);
+            em.close();
         }
-        return pagamentoPlanos;
+        return pagamentoPlano;
     }
 
-    public static PagamentoPlano instanciarPagamentoPlano(ResultSet rs) throws SQLException {
-        PagamentoPlano pagamentoPlano = new PagamentoPlano(rs.getInt("idPagamentoPlano"),
-                null,
-                rs.getInt("idPagamento"),
-                rs.getInt("tipoPagamento"),
-                rs.getInt("parcelas"),
-                rs.getFloat("valorPagamento"),
-                rs.getDate("dataPagamento")) {
-        };
-
-        pagamentoPlano.setIdMatriculaAcademia(rs.getInt("MatriculaAcademia_idMatriculaAcademia"));
-
+    public PagamentoPlano obterPagamentoPlano(Integer idPagamentoPlano) {
+        EntityManager em = new ConexaoFactory().getConexao();
+        PagamentoPlano pagamentoPlano = null;
+        try {
+            pagamentoPlano = em.find(PagamentoPlano.class, idPagamentoPlano);
+        } catch (Exception e) {
+            System.err.println(e);
+        } finally {
+            em.close();
+        }
         return pagamentoPlano;
+    }
+
+    public List<PagamentoPlano> obterPagamentoPlanos() {
+        EntityManager em = new ConexaoFactory().getConexao();
+        List<PagamentoPlano> pagamentosPlano = null;
+        try {
+            pagamentosPlano = em.createQuery("from PagamentoPlano t").getResultList();
+        } catch (Exception e) {
+            System.err.println(e);
+        } finally {
+            em.close();
+        }
+        return pagamentosPlano;
     }
 }

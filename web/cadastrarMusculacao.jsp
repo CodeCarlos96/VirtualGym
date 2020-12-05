@@ -5,13 +5,12 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <script src="scripts/musculacao.js" charset="utf-8"></script>
-        <title>Virtual Gym</title>
+        <title>Virtual Gym - Cadastrar Musculação</title>
     </head>
     <body>
         <a href="index.jsp"><button>Menu</button></a>
         <a href="PesquisaExercicioFichaController?idFichaTreino=${fichaTreino.idFichaTreino}"><button>Voltar</button></a>
-        <h1>${operacao} Exercicios de Musculação (${fichaTreino.aluno.nome} / ${fichaTreino.dataInicio})</h1>
+        <h1>${operacao} Exercicios de Musculação (${fichaTreino.aluno.usuario.nome} / ${fichaTreino.dataInicio})</h1>
         <form action="ManterMusculacaoController?acao=confirmarOperacao&operacao=${operacao}&idFichaTreino=${fichaTreino.idFichaTreino}&idMusculacao=${musculacao.idMusculacao}" method="post" name="formManterMusculacao" onsubmit="return validarFormulario(this)">
             <span id="erro" style="color: red">${erro}</span>
             <table>
@@ -47,9 +46,10 @@
                     </tr>
                     <tr>
                         <td>Repetições: </td> <td><input type="number" name="txtRepeticoes" min="0" value="${musculacao.repeticoes}" <c:if test="${operacao == 'Excluir'}"> readonly </c:if>></td>
-                    </tr>
-                </table>
-                <input type="submit" name="btnConfirmar" value="Confirmar">
+                </tr>
+            </table>
+            <input type="submit" name="btnConfirmar" value="Confirmar">
         </form>
+        <script src="scripts/musculacao.js" charset="utf-8"></script>
     </body>
 </html>

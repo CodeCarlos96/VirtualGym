@@ -1,6 +1,5 @@
 package controller;
 
-import exception.TraduzirExcecao;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.text.ParseException;
@@ -14,6 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import model.Endereco;
 import model.Professor;
+import model.Usuario;
 
 public class ManterProfessorController extends HttpServlet {
 
@@ -47,7 +47,7 @@ public class ManterProfessorController extends HttpServlet {
             request.setAttribute("operacao", operacao);
 
             if (!operacao.equals("Incluir")) {
-                int idProfessor = Integer.parseInt(request.getParameter("idProfessor"));
+                Integer idProfessor = Integer.parseInt(request.getParameter("idProfessor"));
                 Professor professor = Professor.obterProfessor(idProfessor);
                 request.setAttribute("professor", professor);
             }
@@ -111,7 +111,7 @@ public class ManterProfessorController extends HttpServlet {
     private void confirmarOperacao(HttpServletRequest request, HttpServletResponse response) throws SQLException, ParseException, ClassNotFoundException, ServletException, IOException {
         String operacao = request.getParameter("operacao");
 
-        int idProfessor = Integer.parseInt(request.getParameter("txtIdProfessor"));
+        Integer idProfessor = operacao.equals("Incluir") ? null : Integer.parseInt(request.getParameter("idProfessor"));
         String nome = request.getParameter("txtNome");
         String email = request.getParameter("txtEmail");
         String senha = request.getParameter("txtSenha");
@@ -134,48 +134,24 @@ public class ManterProfessorController extends HttpServlet {
         String numero = request.getParameter("txtNumero");
 
         try {
-            Endereco endereco = new Endereco(idProfessor, logradouro, bairro, cidade, uf, cep, complemento, numero);
+            Integer idEndereco = null;
+            Integer idUsuario = null;
 
-            Professor professor = new Professor(idProfessor, dataAdmissao, idProfessor,
-                    email, senha, nome, cpf, rg, sexo, dataNascimento, status, telefone, endereco);
-
-            if (operacao.equals("Incluir")) {
-                endereco.gravar();
-                professor.gravar();
-            } else {
-                if (operacao.equals("Editar")) {
-                    professor.editar();
-                    endereco.editar();
-                }
-                if (operacao.equals("Excluir")) {
-                    professor.excluir();
-                    endereco.excluir();
-                }
+            if (!operacao.equals("Incluir")) {
+                Professor professorFind = Professor.obterProfessor(idProfessor);
+                idUsuario = professorFind.getUsuario().getIdUsuario();
+                idEndereco = professorFind.getUsuario().getEndereco().getIdEndereco();
             }
+
+            Endereco endereco = new Endereco(idEndereco, logradouro, bairro, cidade, uf, cep, complemento, numero);
+            Usuario usuario = new Usuario(idUsuario, email, senha, nome, cpf, rg, sexo, dataNascimento, status, telefone, endereco);
+            Professor professor = new Professor(idProfessor, dataAdmissao, usuario);
+
+            professor = operacao.equals("Excluir") ? professor.excluir() : professor.gravar();
 
             RequestDispatcher view = request.getRequestDispatcher("PesquisaProfessorController");
             view.forward(request, response);
-        } catch (com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException ex) {
-            Professor professor;
-            if (!operacao.equals("Excluir")) {
-                Endereco endereco = new Endereco(idProfessor, logradouro, bairro, cidade, uf, cep, complemento, numero);
-                if (operacao.equals("Incluir") && Professor.obterUsuario(idProfessor) == null) {
-                    endereco.excluir();
-                }
-                professor = new Professor(idProfessor, dataAdmissao, idProfessor,
-                        email, senha, nome, cpf, rg, sexo, dataNascimento, status, telefone, endereco);
-            } else {
-                professor = Professor.obterProfessor(idProfessor);
-            }
-
-            request.setAttribute("operacao", operacao);
-            request.setAttribute("professor", professor);
-            request.setAttribute("erro", "Erro: " + TraduzirExcecao.ex(ex.getMessage()));
-
-            RequestDispatcher view = request.getRequestDispatcher("/cadastrarProfessor.jsp");
-            view.forward(request, response);
-
-        } catch (ServletException | IOException | SQLException | ClassNotFoundException ex) {
+        } catch (ServletException | IOException ex) {
             Logger.getLogger(ManterProfessorController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

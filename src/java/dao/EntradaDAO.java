@@ -1,129 +1,96 @@
 package dao;
 
-import static dao.DAO.fecharConexao;
-import java.sql.Connection;
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Types;
-import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.EntityManager;
+import model.Aluno;
 import model.Entrada;
 
 public class EntradaDAO {
-
-    public static void gravar(Entrada entrada) throws SQLException, ClassNotFoundException {
-        Connection conexao = null;
-        PreparedStatement comando = null;
-
+    
+    private static EntradaDAO instancia = new EntradaDAO();
+    
+    private EntradaDAO() {
+    }
+    
+    public static EntradaDAO getInstancia() {
+        return instancia;
+    }
+    
+    public Entrada gravar(Entrada entrada) {
+        EntityManager em = new ConexaoFactory().getConexao();
         try {
-            conexao = BD.getConexao();
-            comando = conexao.prepareStatement(
-                    "insert into Entrada (idEntrada, dataEntrada, diaVencimento, Aluno_idAluno) values (?, ?, ?)"
-            );
-
-            comando.setInt(1, entrada.getIdEntrada());
-            comando.setDate(2, (Date) entrada.getDataEntrada());
-
-            if (entrada.getAluno() == null) {
-                comando.setNull(3, Types.INTEGER);
+            em.getTransaction().begin();
+            if (entrada.getIdEntrada() == null) {
+                em.persist(entrada);
             } else {
-                comando.setInt(3, entrada.getAluno().getIdAluno());
+                em.merge(entrada);
             }
-
-            comando.executeUpdate();
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+            System.err.println(e);
         } finally {
-            fecharConexao(conexao, comando);
+            em.close();
         }
+        return entrada;
     }
-
-    public static void editar(Entrada entrada) throws SQLException, ClassNotFoundException {
-        Connection conexao = null;
-        PreparedStatement comando = null;
-
-        try {
-            conexao = BD.getConexao();
-            comando = conexao.prepareStatement(
-                    "update Entrada set dataEntrada=?, diaVencimento=?, Aluno_idAluno=? where idEntrada=?"
-            );
-            comando.setDate(1, (Date) entrada.getDataEntrada());
-
-            if (entrada.getAluno() == null) {
-                comando.setNull(2, Types.INTEGER);
-            } else {
-                comando.setInt(2, entrada.getAluno().getIdAluno());
-            }
-            comando.setInt(3, entrada.getIdEntrada());
-
-            comando.executeUpdate();
-        } finally {
-            fecharConexao(conexao, comando);
-        }
-    }
-
-    public static void excluir(Entrada entrada) throws SQLException, ClassNotFoundException {
-        Connection conexao = null;
-        Statement comando = null;
-        String stringSQL;
-        try {
-            conexao = BD.getConexao();
-            comando = conexao.createStatement();
-            stringSQL = "delete from Entrada where idEntrada = " + entrada.getIdEntrada();
-            comando.execute(stringSQL);
-        } finally {
-            fecharConexao(conexao, comando);
-        }
-    }
-
-    public static List<Entrada> obterEntradas()
-            throws ClassNotFoundException, SQLException {
-        Connection conexao = null;
-        Statement comando = null;
-        List<Entrada> entradas = new ArrayList<Entrada>();
+    
+    public Entrada excluir(Integer idEntrada) {
+        EntityManager em = new ConexaoFactory().getConexao();
         Entrada entrada = null;
         try {
-            conexao = BD.getConexao();
-            comando = conexao.createStatement();
-            ResultSet rs = comando.executeQuery("select * from Entrada");
-            while (rs.next()) {
-                entrada = instanciarEntrada(rs);
-                entradas.add(entrada);
-            }
+            entrada = em.find(Entrada.class, idEntrada);
+            em.getTransaction().begin();
+            em.remove(entrada);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+            System.err.println(e);
         } finally {
-            fecharConexao(conexao, comando);
+            em.close();
+        }
+        return entrada;
+    }
+    
+    public Entrada obterEntrada(Integer idEntrada) {
+        EntityManager em = new ConexaoFactory().getConexao();
+        Entrada entrada = null;
+        try {
+            entrada = em.find(Entrada.class, idEntrada);
+        } catch (Exception e) {
+            System.err.println(e);
+        } finally {
+            em.close();
+        }
+        return entrada;
+    }
+    
+    public List<Entrada> obterEntradas() {
+        EntityManager em = new ConexaoFactory().getConexao();
+        List<Entrada> entradas = null;
+        try {
+            entradas = em.createQuery("from Entrada e").getResultList();
+        } catch (Exception e) {
+            System.err.println(e);
+        } finally {
+            em.close();
         }
         return entradas;
     }
-
-    public static Entrada obterEntrada(int idEntrada) throws ClassNotFoundException, SQLException {
-        Connection conexao = null;
-        Statement comando = null;
-        Entrada entrada = null;
+    
+    public List<Entrada> obterEntradasAluno(Integer idAluno) {
+        EntityManager em = new ConexaoFactory().getConexao();
+        List<Entrada> entradas = null;
         try {
-            conexao = BD.getConexao();
-            comando = conexao.createStatement();
-            ResultSet rs = comando.executeQuery("select * from entrada where idEntrada = " + idEntrada);
-            rs.first();
-            entrada = instanciarEntrada(rs);
+            entradas = em.createQuery("SELECT e FROM Entrada e"
+                    + " WHERE e.aluno = :aluno")
+                    .setParameter("aluno", Aluno.obterAluno(idAluno))
+                    .getResultList();
+        } catch (Exception e) {
+            System.err.println(e);
         } finally {
-            fecharConexao(conexao, comando);
+            em.close();
         }
-        return entrada;
-    }
-
-    public static Entrada instanciarEntrada(ResultSet rs) throws SQLException {
-        Entrada entrada;
-        try {
-            entrada = new Entrada(rs.getInt("idEntrada"),
-                    rs.getDate("dataEntrada"),
-                    rs.getString("horarioEntrada"), null);
-
-            entrada.setIdAluno(rs.getInt("Aluno_idAluno"));
-        } catch (SQLException ex) {
-            entrada = null;
-        }
-        return entrada;
+        return entradas;
     }
 }

@@ -1,9 +1,6 @@
 function validarFormulario(form) {
-    var mensagem;
+    let mensagem;
     mensagem = "";
-    if (form.txtIdAluno.value == "") {
-        mensagem = mensagem + "Informe o Código do Aluno\n";
-    }
     if (form.txtNome.value == "") {
         mensagem = mensagem + "Informe o Nome do Aluno\n";
     }
@@ -44,8 +41,13 @@ function validarFormulario(form) {
     if (form.txtCep.value == "") {
         mensagem = mensagem + "Informe o CEP\n";
     }
-    if (form.txtResponsavel.value == "" && idade(form) < 18) {
-        mensagem = mensagem + "Informe o Responsável (Aluno Menor de Idade)\n";
+    if (idade(form) < 18) {
+        if (form.txtResponsavel.value == "")
+            mensagem = mensagem + "Informe o Responsável (Aluno Menor de Idade)\n";
+        if (form.txtCpfResponsavel.value == "")
+            mensagem = mensagem + "Informe o CPF do Responsável\n";
+        else if (form.txtCpfResponsavel.value.length != 11)
+            mensagem = mensagem + "CPF do Responsável Inválido\n";
     }
     if (form.txtSenha.value == "") {
         mensagem = mensagem + "Informe a Senha\n";

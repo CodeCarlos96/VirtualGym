@@ -7,13 +7,13 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>JSP Page</title>
+        <title>Virtual Gym - Alunos</title>
     </head>
     <body>
         <form>
             <button type="submit" formaction="index.jsp">Menu</button>
         </form>
-        <h1>Pesquisa de Alunos</h1>
+        <h1>Alunos</h1>
 
         <table border=1>
             <tr>
@@ -25,8 +25,8 @@
             <c:forEach items="${alunos}" var="aluno">
                 <tr>
                     <td><c:out value="${aluno.idAluno}" /></td>
-                    <td><c:out value="${aluno.nome}" /></td>
-                    <td><c:out value="${aluno.status}" /></td>
+                    <td><c:out value="${aluno.usuario.nome}" /></td>
+                    <td><c:out value="${aluno.usuario.status}" /></td>
                     <td><a href="ManterAlunoController?acao=prepararOperacao&operacao=Editar&idAluno=<c:out value="${aluno.idAluno}"/>">Editar</a></td>
                     <td><a href="ManterAlunoController?acao=prepararOperacao&operacao=Excluir&idAluno=<c:out value="${aluno.idAluno}"/>">Excluir</a></td>
                 </tr>

@@ -5,11 +5,11 @@
  */
 package controller;
 
-import exception.TraduzirExcecao;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.sql.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.RequestDispatcher;
@@ -57,15 +57,12 @@ public class ManterMatriculaAulaController extends HttpServlet {
             String operacao = request.getParameter("operacao");
             request.setAttribute("operacao", operacao);
             request.setAttribute("alunos", Aluno.obterAlunos());
-            request.setAttribute("horarios", Horario.obterHorarios(0));
+            request.setAttribute("turmas", Turma.obterTurmas());
 
             if (!operacao.equals("Incluir")) {
-                int idMatriculaAula = Integer.parseInt(request.getParameter("idMatriculaAula"));
+                Integer idMatriculaAula = Integer.parseInt(request.getParameter("idMatriculaAula"));
                 MatriculaAula matriculaAula = MatriculaAula.obterMatriculaAula(idMatriculaAula);
                 request.setAttribute("matriculaAula", matriculaAula);
-                request.setAttribute("turmas", Turma.obterTurmas());
-            } else {
-                request.setAttribute("turmas", Turma.obterTurmasDisponiveis());
             }
 
             RequestDispatcher view = request.getRequestDispatcher("/cadastrarMatriculaAula.jsp");
@@ -127,59 +124,46 @@ public class ManterMatriculaAulaController extends HttpServlet {
     private void confirmarOperacao(HttpServletRequest request, HttpServletResponse response) throws ParseException, ClassNotFoundException, SQLException, ServletException, IOException {
         String operacao = request.getParameter("operacao");
 
-        int idMatriculaAula = Integer.parseInt(request.getParameter("txtIdMatriculaAula"));
+        Integer idMatriculaAula = operacao.equals("Incluir") ? null : Integer.parseInt(request.getParameter("idMatriculaAula"));
         int diaVencimento = Integer.parseInt(request.getParameter("txtDiaVencimento"));
 
         SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd");
-        java.sql.Date dataMatricula = new java.sql.Date(fmt.parse(request.getParameter("txtDataMatricula")).getTime());
+        Date dataMatricula = new Date(fmt.parse(request.getParameter("txtDataMatricula")).getTime());
 
-        int idAluno = operacao.equals("Excluir") ? 0 : Integer.parseInt(request.getParameter("optAluno"));
-        int idTurma = operacao.equals("Excluir") ? 0 : Integer.parseInt(request.getParameter("optTurma"));
+        Integer idAluno = operacao.equals("Excluir") ? 0 : Integer.parseInt(request.getParameter("optAluno"));
+        Integer idTurma = operacao.equals("Excluir") ? 0 : Integer.parseInt(request.getParameter("optTurma"));
 
         try {
-            Aluno aluno = null;
-            Turma turma = null;
-            if (idAluno != 0) {
-                aluno = Aluno.obterAluno(idAluno);
-            }
-            if (idTurma != 0) {
-                turma = Turma.obterTurma(idTurma);
-            }
-
+            Aluno aluno = Aluno.obterAluno(idAluno);
+            Turma turma = Turma.obterTurma(idTurma);
             MatriculaAula matriculaAula = new MatriculaAula(idMatriculaAula, dataMatricula, diaVencimento, aluno, turma);
-            if (operacao.equals("Incluir") && !MatriculaAula.matriculado(aluno.getIdAluno(), turma.getIdTurma())) {
-                matriculaAula.gravar();
-            }
-            if (operacao.equals("Editar")) {
-                matriculaAula.editar();
-            }
+
             if (operacao.equals("Excluir")) {
                 matriculaAula.excluir();
-            }
-            RequestDispatcher view = request.getRequestDispatcher("PesquisaMatriculaAulaController");
-            view.forward(request, response);
-        } catch (com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException ex) {
-            MatriculaAula matriculaAula;
-            if (!operacao.equals("Excluir")) {
-                Aluno aluno = Aluno.obterAluno(idAluno);
-                Turma turma = Turma.obterTurma(idTurma);
-                matriculaAula = new MatriculaAula(idMatriculaAula, dataMatricula, diaVencimento, aluno, turma);
+            } else if (operacao.equals("Incluir") && MatriculaAula.matriculado(idAluno, idTurma)) {
+                throw new Exception("Aluno já está matriculado nesta turma");
+            } else if (operacao.equals("Incluir") && MatriculaAula.getMatriculados(idTurma) >= turma.getSala().getCapacidade()) {
+                throw new Exception("Turma lotada");
             } else {
-                matriculaAula = MatriculaAula.obterMatriculaAula(idMatriculaAula);
+                matriculaAula.gravar();
             }
 
+            RequestDispatcher view = request.getRequestDispatcher("PesquisaMatriculaAulaController");
+            view.forward(request, response);
+        } catch (Exception ex) {
+            request.setAttribute("erro", ex.getLocalizedMessage());
             request.setAttribute("operacao", operacao);
-            request.setAttribute("turmas", Turma.obterTurmasDisponiveis());
             request.setAttribute("alunos", Aluno.obterAlunos());
             request.setAttribute("horarios", Horario.obterHorarios(0));
+            request.setAttribute("turmas", Turma.obterTurmas());
+
+            Aluno aluno = Aluno.obterAluno(idAluno);
+            Turma turma = Turma.obterTurma(idTurma);
+            MatriculaAula matriculaAula = new MatriculaAula(idMatriculaAula, dataMatricula, diaVencimento, aluno, turma);
             request.setAttribute("matriculaAula", matriculaAula);
-            request.setAttribute("erro", "Erro: " + TraduzirExcecao.ex(ex.getMessage()));
 
             RequestDispatcher view = request.getRequestDispatcher("/cadastrarMatriculaAula.jsp");
             view.forward(request, response);
-
-        } catch (ServletException | IOException | SQLException | ClassNotFoundException ex) {
-            Logger.getLogger(ManterMatriculaAulaController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 }

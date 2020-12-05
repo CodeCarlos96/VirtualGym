@@ -6,23 +6,19 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <script src="scripts/turma.js" charset="utf-8"></script>
-        <title>Virtual Gym</title>
+        <title>Virtual Gym - Cadastrar Turma</title>
     </head>
     <body>
         <a href="index.jsp"><button>Menu</button></a>
         <a href="PesquisaTurmaController"><button>Voltar</button></a>
         <h1>${operacao} Turma</h1>
-        <form action="ManterTurmaController?acao=confirmarOperacao&operacao=${operacao}" method="post" name="formManterTurma" onsubmit="return validarFormulario(this)">
+        <form action="ManterTurmaController?acao=confirmarOperacao&operacao=${operacao}&idTurma=${turma.idTurma}" method="post" name="formManterTurma" onsubmit="return validarFormulario(this)">
             <span id="erro" style="color: red">${erro}</span>
             <table>
                 <tr>
-                    <td>Código:</td> <td><input type="number" name="txtIdTurma" min="1" value="${turma.idTurma}" <c:if test="${operacao != 'Incluir'}"> readonly </c:if>></td>
-                    </tr>
-                    <tr>
-                        <td>Sala:</td>
-                        <td>
-                            <select name="optSala" <c:if test="${operacao == 'Excluir'}"> disabled </c:if>>
+                    <td>Sala:</td>
+                    <td>
+                        <select name="optSala" <c:if test="${operacao == 'Excluir'}"> disabled </c:if>>
                             <option value="0" <c:if test="${turma.sala.idSala == null}" > selected </c:if> > </option>
                             <c:forEach items="${salas}" var="sala">
                                 <option value="${sala.idSala}" <c:if test="${turma.sala.idSala == sala.idSala}"> selected </c:if>>${sala.nome}</option>
@@ -47,7 +43,7 @@
                         <select name="optProfessor" <c:if test="${operacao == 'Excluir'}"> disabled </c:if>>
                             <option value="0" <c:if test="${turma.professor.idProfessor == null}" > selected </c:if> > </option>
                             <c:forEach items="${professores}" var="professor">
-                                <option value="${professor.idProfessor}" <c:if test="${turma.professor.idProfessor == professor.idProfessor}"> selected </c:if>>${professor.nome}</option>
+                                <option value="${professor.idProfessor}" <c:if test="${turma.professor.idProfessor == professor.idProfessor}"> selected </c:if>>${professor.usuario.nome}</option>
                             </c:forEach>
                         </select>
                     </td>
@@ -55,5 +51,6 @@
             </table>
             <input type="submit" name="btnConfirmar" value="Confirmar">
         </form>
+        <script src="scripts/turma.js" charset="utf-8"></script>
     </body>
 </html>

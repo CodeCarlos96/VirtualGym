@@ -5,7 +5,6 @@
  */
 package controller;
 
-import exception.TraduzirExcecao;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.logging.Level;
@@ -52,7 +51,7 @@ public class ManterAulaController extends HttpServlet {
             request.setAttribute("operacao", operacao);
 
             if (!operacao.equals("Incluir")) {
-                int idAula = Integer.parseInt(request.getParameter("idAula"));
+                Integer idAula = Integer.parseInt(request.getParameter("idAula"));
                 Aula aula = Aula.obterAula(idAula);
                 request.setAttribute("aula", aula);
             }
@@ -63,8 +62,6 @@ public class ManterAulaController extends HttpServlet {
             throw e;
         } catch (IOException e) {
             throw new ServletException(e);
-        } catch (ClassNotFoundException | SQLException ex) {
-            Logger.getLogger(ManterAulaController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -118,7 +115,7 @@ public class ManterAulaController extends HttpServlet {
     private void confirmarOperacao(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, ClassNotFoundException, SQLException {
         String operacao = request.getParameter("operacao");
 
-        int idAula = Integer.parseInt(request.getParameter("txtIdAula"));
+        Integer idAula = operacao.equals("Incluir") ? null : Integer.parseInt(request.getParameter("idAula"));
         String nome = request.getParameter("txtNome");
         String descricao = request.getParameter("txtDescricaoAula");
         float valor = Float.parseFloat(request.getParameter("txtValorAula"));
@@ -126,34 +123,16 @@ public class ManterAulaController extends HttpServlet {
 
         try {
             Aula aula = new Aula(idAula, nome, descricao, valor, taxaJuros);
-            if (operacao.equals("Incluir")) {
-                aula.gravar();
-            }
-            if (operacao.equals("Editar")) {
-                aula.editar();
-            }
+
             if (operacao.equals("Excluir")) {
                 aula.excluir();
+            }else{
+                aula.gravar();
             }
 
             RequestDispatcher view = request.getRequestDispatcher("PesquisaAulaController");
             view.forward(request, response);
-        } catch (com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException ex) {
-            Aula aula;
-            if (!operacao.equals("Excluir")) {
-                aula = new Aula(idAula, nome, descricao, valor, taxaJuros);
-            } else {
-                aula = Aula.obterAula(idAula);
-            }
-
-            request.setAttribute("operacao", operacao);
-            request.setAttribute("aula", aula);
-            request.setAttribute("erro", "Erro: " + TraduzirExcecao.ex(ex.getMessage()));
-
-            RequestDispatcher view = request.getRequestDispatcher("/cadastrarAula.jsp");
-            view.forward(request, response);
-
-        } catch (ServletException | IOException | SQLException | ClassNotFoundException ex) {
+        } catch (ServletException | IOException ex) {
             Logger.getLogger(ManterAulaController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

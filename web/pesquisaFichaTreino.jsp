@@ -7,13 +7,13 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>JSP Page</title>
+        <title>Virtual Gym - Fichas</title>
     </head>
     <body>
         <form>
             <button type="submit" formaction="index.jsp">Menu</button>
         </form>
-        <h1>Pesquisa de Ficha de Treino</h1>
+        <h1>Fichas de Treino</h1>
 
         <table border=1>
             <tr>
@@ -29,8 +29,8 @@
                     <td><c:out value="${fichaTreino.idFichaTreino}" /></td>
                     <td><c:out value="${fichaTreino.dataInicio}" /></td>
                     <td><c:out value="${fichaTreino.dataReavaliacao}" /></td>
-                    <td><c:out value="${fichaTreino.aluno.nome}" /></td>
-                    <td><c:out value="${fichaTreino.professor.nome}" /></td>
+                    <td><c:out value="${fichaTreino.aluno.usuario.nome}" /></td>
+                    <td><c:out value="${fichaTreino.professor.usuario.nome}" /></td>
                     <td><a href="ManterFichaTreinoController?acao=prepararOperacao&operacao=Editar&idFichaTreino=<c:out value="${fichaTreino.idFichaTreino}"/>">Editar</a></td>
                     <td><a href="ManterFichaTreinoController?acao=prepararOperacao&operacao=Excluir&idFichaTreino=<c:out value="${fichaTreino.idFichaTreino}"/>">Excluir</a></td>
                     <td><a href="PesquisaExercicioFichaController?idFichaTreino=<c:out value="${fichaTreino.idFichaTreino}"/>">Exercicios</a></td>

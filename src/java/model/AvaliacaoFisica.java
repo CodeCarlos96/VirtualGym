@@ -1,13 +1,24 @@
-
 package model;
 
 import dao.AvaliacaoFisicaDAO;
-import java.sql.SQLException;
-import java.util.Date;
+import java.io.Serializable;
+import java.sql.Date;
 import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.EntityManager;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
-public class AvaliacaoFisica {
-    private int idAvaliacaoFisica;
+@Entity
+@Table(name = "AvaliacaoFisica")
+public class AvaliacaoFisica implements Serializable {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer idAvaliacaoFisica;
     private Date dataAvaliacao;
     private Date dataReavaliacao;
     private float peso;
@@ -31,13 +42,16 @@ public class AvaliacaoFisica {
     private float dobraSuprailiaca;
     private float dobraCoxaDireita;
     private float dobraCoxaEsquerda;
-    
-    private Aluno aluno;
-    private int idAluno;
-    private Professor professor;
-    private int idProfessor;
 
-    public AvaliacaoFisica(int idAvaliacaoFisica, Date dataAvaliacao, Date dataReavaliacao, float peso, float altura, float perimetroTorax, float perimetroQuadril, float perimetroAbdomen, float perimetroCintura, float perimetroAntebracoDireito, float perimetroAntebracoEsquerdo, float perimetroBracoDireito, float perimetroBracoEsquerdo, float perimetroCoxaDireita, float perimetroCoxaEsquerda, float perimetroPanturrilhaDireita, float perimetroPanturrilhaEsquerda, float dobraSubescapular, float dobraTricipital, float dobraPeitoral, float dobraAbdominal, float dobraSuprailiaca, float dobraCoxaDireita, float dobraCoxaEsquerda, Aluno aluno, Professor professor) {
+    @ManyToOne
+    private Aluno aluno;
+    @ManyToOne
+    private Professor professor;
+
+    public AvaliacaoFisica() {
+    }
+
+    public AvaliacaoFisica(Integer idAvaliacaoFisica, Date dataAvaliacao, Date dataReavaliacao, float peso, float altura, float perimetroTorax, float perimetroQuadril, float perimetroAbdomen, float perimetroCintura, float perimetroAntebracoDireito, float perimetroAntebracoEsquerdo, float perimetroBracoDireito, float perimetroBracoEsquerdo, float perimetroCoxaDireita, float perimetroCoxaEsquerda, float perimetroPanturrilhaDireita, float perimetroPanturrilhaEsquerda, float dobraSubescapular, float dobraTricipital, float dobraPeitoral, float dobraAbdominal, float dobraSuprailiaca, float dobraCoxaDireita, float dobraCoxaEsquerda, Aluno aluno, Professor professor) {
         this.idAvaliacaoFisica = idAvaliacaoFisica;
         this.dataAvaliacao = dataAvaliacao;
         this.dataReavaliacao = dataReavaliacao;
@@ -66,13 +80,11 @@ public class AvaliacaoFisica {
         this.professor = professor;
     }
 
-    
-
-    public int getIdAvaliacaoFisica() {
+    public Integer getIdAvaliacaoFisica() {
         return idAvaliacaoFisica;
     }
 
-    public void setIdAvaliacaoFisica(int idAvaliacaoFisica) {
+    public void setIdAvaliacaoFisica(Integer idAvaliacaoFisica) {
         this.idAvaliacaoFisica = idAvaliacaoFisica;
     }
 
@@ -260,61 +272,39 @@ public class AvaliacaoFisica {
         this.dobraCoxaEsquerda = dobraCoxaEsquerda;
     }
 
-    public Aluno getAluno() throws ClassNotFoundException, SQLException {
-        if((this.idAluno != 0) && (this.aluno == null)){
-            this.aluno = Aluno.obterAluno(this.idAluno);
-        }
-        return this.aluno;
+    public Aluno getAluno() {
+        return aluno;
     }
 
     public void setAluno(Aluno aluno) {
         this.aluno = aluno;
     }
 
-    public int getIdAluno() {
-        return idAluno;
-    }
-
-    public void setIdAluno(int idAluno) {
-        this.idAluno = idAluno;
-    }
-
-    public Professor getProfessor() throws ClassNotFoundException, SQLException {
-        if((this.idProfessor != 0) && (this.professor == null)){
-            this.professor = Professor.obterProfessor(this.idProfessor);
-        }
-        return this.professor;
+    public Professor getProfessor() {
+        return professor;
     }
 
     public void setProfessor(Professor professor) {
         this.professor = professor;
     }
 
-    public int getIdProfessor() {
-        return idProfessor;
+    public static AvaliacaoFisica obterAvaliacaoFisica(Integer idAvaliacaoFisica) {
+        return AvaliacaoFisicaDAO.getInstancia().obterAvaliacaoFisica(idAvaliacaoFisica);
     }
 
-    public void setIdProfessor(int idProfessor) {
-        this.idProfessor = idProfessor;
+    public static List<AvaliacaoFisica> obterAvaliacoesFisicas() {
+        return AvaliacaoFisicaDAO.getInstancia().obterAvaliacoesFisicas();
     }
 
-    public static AvaliacaoFisica obterAvaliacaoFisica(int idAvaliacaoFisica) throws ClassNotFoundException, SQLException{
-        return AvaliacaoFisicaDAO.obterAvaliacaoFisica(idAvaliacaoFisica);
+    public AvaliacaoFisica gravar() {
+        return AvaliacaoFisicaDAO.getInstancia().gravar(this);
+    }
+
+    public AvaliacaoFisica excluir() {
+        return AvaliacaoFisicaDAO.getInstancia().excluir(this.idAvaliacaoFisica);
     }
     
-    public static List<AvaliacaoFisica> obterAvaliacoesFisicas() throws ClassNotFoundException, SQLException{
-        return AvaliacaoFisicaDAO.obterAvaliacoesFisicas();
-    }
-    
-    public void gravar() throws SQLException, ClassNotFoundException{
-        AvaliacaoFisicaDAO.gravar(this);
-    }
-    
-    public void editar() throws SQLException, ClassNotFoundException{
-        AvaliacaoFisicaDAO.editar(this);
-    }
-    
-    public void excluir() throws SQLException, ClassNotFoundException{
-        AvaliacaoFisicaDAO.excluir(this);
+    public static void excluirAvaliacaoAluno(Aluno aluno, EntityManager em) throws Exception {
+        AvaliacaoFisicaDAO.getInstancia().excluirAvaliacaoAluno(aluno, em);
     }
 }

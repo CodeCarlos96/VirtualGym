@@ -5,7 +5,6 @@
  */
 package controller;
 
-import exception.TraduzirExcecao;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.text.ParseException;
@@ -19,6 +18,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import model.Administrador;
 import model.Endereco;
+import model.Usuario;
 
 /**
  *
@@ -56,7 +56,7 @@ public class ManterAdministradorController extends HttpServlet {
             request.setAttribute("operacao", operacao);
 
             if (!operacao.equals("Incluir")) {
-                int idAdministrador = Integer.parseInt(request.getParameter("idAdministrador"));
+                Integer idAdministrador = Integer.parseInt(request.getParameter("idAdministrador"));
                 Administrador administrador = Administrador.obterAdministrador(idAdministrador);
                 request.setAttribute("administrador", administrador);
             }
@@ -120,7 +120,7 @@ public class ManterAdministradorController extends HttpServlet {
     private void confirmarOperacao(HttpServletRequest request, HttpServletResponse response) throws SQLException, ParseException, ServletException, IOException, ClassNotFoundException {
         String operacao = request.getParameter("operacao");
 
-        int idAdministrador = Integer.parseInt(request.getParameter("txtIdAdministrador"));
+        Integer idAdministrador = operacao.equals("Incluir") ? null : Integer.parseInt(request.getParameter("idAdministrador"));
         String nome = request.getParameter("txtNome");
         String email = request.getParameter("txtEmail");
         String senha = request.getParameter("txtSenha");
@@ -143,48 +143,24 @@ public class ManterAdministradorController extends HttpServlet {
         String numero = request.getParameter("txtNumero");
 
         try {
-            Endereco endereco = new Endereco(idAdministrador, logradouro, bairro, cidade, uf, cep, complemento, numero);
+            Integer idEndereco = null;
+            Integer idUsuario = null;
 
-            Administrador administrador = new Administrador(idAdministrador, dataAdmissao, idAdministrador, email, senha,
-                    nome, cpf, rg, sexo, dataNascimento, status, telefone, endereco);
-
-            if (operacao.equals("Incluir")) {
-                endereco.gravar();
-                administrador.gravar();
-            } else {
-                if (operacao.equals("Editar")) {
-                    administrador.editar();
-                    endereco.editar();
-                }
-                if (operacao.equals("Excluir")) {
-                    administrador.excluir();
-                    endereco.excluir();
-                }
+            if (!operacao.equals("Incluir")) {
+                Administrador administradorFind = Administrador.obterAdministrador(idAdministrador);
+                idUsuario = administradorFind.getUsuario().getIdUsuario();
+                idEndereco = administradorFind.getUsuario().getEndereco().getIdEndereco();
             }
+
+            Endereco endereco = new Endereco(idEndereco, logradouro, bairro, cidade, uf, cep, complemento, numero);
+            Usuario usuario = new Usuario(idUsuario, email, senha, nome, cpf, rg, sexo, dataNascimento, status, telefone, endereco);
+            Administrador administrador = new Administrador(idAdministrador ,dataAdmissao, usuario);
+
+            administrador = operacao.equals("Excluir") ? administrador.excluir() : administrador.gravar();
 
             RequestDispatcher view = request.getRequestDispatcher("PesquisaAdministradorController");
             view.forward(request, response);
-        } catch (com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException ex) {
-            Administrador administrador;
-            if (!operacao.equals("Excluir")) {
-                Endereco endereco = new Endereco(idAdministrador, logradouro, bairro, cidade, uf, cep, complemento, numero);
-                if (operacao.equals("Incluir") && Administrador.obterUsuario(idAdministrador) == null) {
-                    endereco.excluir();
-                }
-                administrador = new Administrador(idAdministrador, dataAdmissao, idAdministrador, email, senha,
-                        nome, cpf, rg, sexo, dataNascimento, status, telefone, endereco);
-            } else {
-                administrador = Administrador.obterAdministrador(idAdministrador);
-            }
-
-            request.setAttribute("operacao", operacao);
-            request.setAttribute("administrador", administrador);
-            request.setAttribute("erro", "Erro: " + TraduzirExcecao.ex(ex.getMessage()));
-
-            RequestDispatcher view = request.getRequestDispatcher("/cadastrarAdministrador.jsp");
-            view.forward(request, response);
-
-        } catch (ServletException | IOException | SQLException | ClassNotFoundException ex) {
+        } catch (ServletException | IOException ex) {
             Logger.getLogger(ManterAdministradorController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

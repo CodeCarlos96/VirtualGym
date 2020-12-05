@@ -6,26 +6,22 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <script src="scripts/fichaTreino.js" charset="utf-8"></script>
-        <title>Virtual Gym</title>
+        <title>Virtual Gym - Cadastrar Ficha de Treino</title>
     </head>
     <body>
         <a href="index.jsp"><button>Menu</button></a>
         <a href="PesquisaFichaTreinoController"><button>Voltar</button></a>
         <h1>${operacao} Ficha de Treino</h1>
-        <form action="ManterFichaTreinoController?acao=confirmarOperacao&operacao=${operacao}" method="post" name="formManterFichaTreino" onsubmit="return validarFormulario(this)">
+        <form action="ManterFichaTreinoController?acao=confirmarOperacao&operacao=${operacao}&idFichaTreino=${fichaTreino.idFichaTreino}" method="post" name="formManterFichaTreino" onsubmit="return validarFormulario(this)">
             <span id="erro" style="color: red">${erro}</span>
             <table>
                 <tr>
-                    <td>Código: </td><td><input type="number" name="txtIdFichaTreino" min="1" value="${fichaTreino.idFichaTreino}" <c:if test="${operacao != 'Incluir'}"> readonly </c:if>></td>
-                    </tr>
-                    <tr>
-                        <td>Aluno: </td>
-                        <td>
-                            <select name="optAluno" <c:if test="${operacao == 'Excluir'}"> disabled </c:if>>
+                    <td>Aluno: </td>
+                    <td>
+                        <select name="optAluno" <c:if test="${operacao == 'Excluir'}"> disabled </c:if>>
                             <option value="0" <c:if test="${fichaTreino.aluno.idAluno == null}" > selected </c:if> > </option>
                             <c:forEach items="${alunos}" var="aluno">
-                                <option value="${aluno.idAluno}" <c:if test="${fichaTreino.aluno.idAluno == aluno.idAluno}"> selected </c:if>>${aluno.nome}</option>
+                                <option value="${aluno.idAluno}" <c:if test="${fichaTreino.aluno.idAluno == aluno.idAluno}"> selected </c:if>>${aluno.usuario.nome}</option>
                             </c:forEach>
                         </select>
                     </td>
@@ -36,7 +32,7 @@
                         <select name="optProfessor" <c:if test="${operacao == 'Excluir'}"> disabled </c:if>>
                             <option value="0" <c:if test="${fichaTreino.professor.idProfessor == null}" > selected </c:if> > </option>
                             <c:forEach items="${professores}" var="professor">
-                                <option value="${professor.idProfessor}" <c:if test="${fichaTreino.professor.idProfessor == professor.idProfessor}"> selected </c:if>>${professor.nome}</option>
+                                <option value="${professor.idProfessor}" <c:if test="${fichaTreino.professor.idProfessor == professor.idProfessor}"> selected </c:if>>${professor.usuario.nome}</option>
                             </c:forEach>
                         </select>
                     </td>
@@ -66,5 +62,6 @@
             </table>
             <input type="submit" name="btnConfirmar" value="Confirmar">
         </form>
+        <script src="scripts/fichaTreino.js" charset="utf-8"></script>
     </body>
 </html>

@@ -7,14 +7,14 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>JSP Page</title>
+        <title>Virtual Gym - Ficha</title>
     </head>
     <body>
         <form>
             <button type="submit" formaction="index.jsp">Menu</button>
             <button type="submit" formaction="PesquisaFichaTreinoController">Voltar</button>
         </form>
-        <h1>Exercicios Ficha (${fichaTreino.aluno.nome} / ${fichaTreino.dataInicio})</h1>
+        <h1>Exercicios - Ficha (${fichaTreino.aluno.usuario.nome} / ${fichaTreino.dataInicio})</h1>
 
         <table border=1>
             <h2>Aerobicos</h2>

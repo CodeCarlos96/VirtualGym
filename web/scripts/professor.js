@@ -1,9 +1,6 @@
 function validarFormulario(form) {
     var mensagem;
     mensagem = "";
-    if (form.txtIdProfessor.value == "") {
-        mensagem = mensagem + "Informe o Código do Professor\n";
-    }
     if (form.txtNome.value == "") {
         mensagem = mensagem + "Informe o Nome do Professor\n";
     }

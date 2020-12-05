@@ -5,7 +5,6 @@
  */
 package controller;
 
-import exception.TraduzirExcecao;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.text.ParseException;
@@ -49,23 +48,23 @@ public class ManterMusculacaoController extends HttpServlet {
             }
         }
     }
-    
+
     public void prepararOperacao(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, ClassNotFoundException, SQLException {
         try {
             String operacao = request.getParameter("operacao");
-            int idFichaTreino = Integer.parseInt(request.getParameter("idFichaTreino"));
-            
+            Integer idFichaTreino = Integer.parseInt(request.getParameter("idFichaTreino"));
+
             request.setAttribute("operacao", operacao);
             request.setAttribute("fichaTreino", FichaTreino.obterFichaTreino(idFichaTreino));
             request.setAttribute("exercicios", Exercicio.obterExerciciosMusculacao());
             request.setAttribute("ordem", Musculacao.obterOrdem(idFichaTreino));
-            
+
             if (!operacao.equals("Incluir")) {
-                int idMusculacao = Integer.parseInt(request.getParameter("idMusculacao"));
+                Integer idMusculacao = Integer.parseInt(request.getParameter("idMusculacao"));
                 Musculacao musculacao = Musculacao.obterMusculacao(idMusculacao);
                 request.setAttribute("musculacao", musculacao);
             }
-            
+
             RequestDispatcher view = request.getRequestDispatcher("/cadastrarMusculacao.jsp");
             view.forward(request, response);
         } catch (ServletException e) {
@@ -124,63 +123,32 @@ public class ManterMusculacaoController extends HttpServlet {
 
     private void confirmarOperacao(HttpServletRequest request, HttpServletResponse response) throws SQLException, ParseException, ServletException, IOException, ClassNotFoundException {
         String operacao = request.getParameter("operacao");
-        int idFichaTreino = Integer.parseInt(request.getParameter("idFichaTreino"));
-        int idMusculacao = operacao.equals("Incluir") ? 0 : Integer.parseInt(request.getParameter("idMusculacao"));
         
+        Integer idFichaTreino = Integer.parseInt(request.getParameter("idFichaTreino"));
+        Integer idMusculacao = operacao.equals("Incluir") ? null : Integer.parseInt(request.getParameter("idMusculacao"));
+
         int series = Integer.parseInt(request.getParameter("txtSeries"));
         int peso = Integer.parseInt(request.getParameter("txtPeso"));
         int repeticoes = Integer.parseInt(request.getParameter("txtRepeticoes"));
         int ordem = operacao.equals("Excluir") ? 0 : Integer.parseInt(request.getParameter("optOrdem"));
-        int idExercicio = operacao.equals("Excluir") ? 0 : Integer.parseInt(request.getParameter("optNome"));
-        
+        Integer idExercicio = operacao.equals("Excluir") ? null : Integer.parseInt(request.getParameter("optNome"));
+
         try {
-            FichaTreino fichaTreino = null;
-            Exercicio exercicio = null;
-            if (idExercicio != 0) {
-                exercicio = Exercicio.obterExercicio(idExercicio);
-            }
-            if (idFichaTreino != 0) {
-                fichaTreino = FichaTreino.obterFichaTreino(idFichaTreino);
-                request.setAttribute("idFichaTreino", idFichaTreino);
-            }
-            
-            Musculacao musculacao = new Musculacao(ordem, series, peso, repeticoes, fichaTreino, exercicio) {
-            };
-            if (operacao.equals("Incluir")) {
-                musculacao.gravar();
+            FichaTreino fichaTreino = FichaTreino.obterFichaTreino(idFichaTreino);
+            Exercicio exercicio = Exercicio.obterExercicio(idExercicio);
+            if (operacao.equals("Incluir")) request.setAttribute("idFichaTreino", idFichaTreino);
+
+            Musculacao musculacao = new Musculacao(idMusculacao, ordem, series, peso, repeticoes, fichaTreino, exercicio);
+
+            if (operacao.equals("Excluir")) {
+                musculacao.excluir();
             } else {
-                musculacao.setIdMusculacao(idMusculacao);
-                if (operacao.equals("Editar")) {
-                    musculacao.editar();
-                }
-                if (operacao.equals("Excluir")) {
-                    musculacao.excluir();
-                }
+                musculacao.gravar();
             }
+
             RequestDispatcher view = request.getRequestDispatcher("PesquisaExercicioFichaController");
             view.forward(request, response);
-        } catch (com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException ex) {
-            Musculacao musculacao;
-            if (!operacao.equals("Excluir")) {
-                Exercicio exercicio = Exercicio.obterExercicio(idExercicio);
-                FichaTreino fichaTreino = FichaTreino.obterFichaTreino(idFichaTreino);
-                musculacao = new Musculacao(ordem, series, peso, repeticoes, fichaTreino, exercicio) {
-                };
-            } else {
-                musculacao = Musculacao.obterMusculacao(idMusculacao);
-            }
-            
-            request.setAttribute("operacao", operacao);
-            request.setAttribute("fichaTreino", FichaTreino.obterFichaTreino(idFichaTreino));
-            request.setAttribute("exercicios", Exercicio.obterExerciciosMusculacao());
-            request.setAttribute("ordem", Musculacao.obterOrdem(idFichaTreino));
-            request.setAttribute("musculacao", musculacao);
-            request.setAttribute("erro", "Erro: " + TraduzirExcecao.ex(ex.getMessage()));
-            
-            RequestDispatcher view = request.getRequestDispatcher("/cadastrarMusculacao.jsp");
-            view.forward(request, response);
-            
-        } catch (ServletException | IOException | SQLException | ClassNotFoundException ex) {
+        } catch (ServletException | IOException ex) {
             Logger.getLogger(ManterMusculacaoController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

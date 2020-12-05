@@ -1,44 +1,42 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package model;
 
 import dao.ProfessorDAO;
-import java.sql.SQLException;
-import java.util.Date;
+import java.io.Serializable;
+import java.sql.Date;
 import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
 
-/**
- *
- * @author Aluno
- */
-public class Professor extends Usuario {
+@Entity
+@Table(name = "Professor")
+public class Professor implements Serializable {
 
-    private int idProfessor;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer idProfessor;
     private Date dataAdmissao;
+    @OneToOne
+    private Usuario usuario;
 
-    public Professor(int idProfessor, Date dataAdmissao, int idUsuario, String email, String senha, String nome, String cpf, String rg, String sexo, Date dataNascimento, String status, String telefone, Endereco endereco) {
-        super(idUsuario, email, senha, nome, cpf, rg, sexo, dataNascimento, status, telefone, endereco);
-        this.idProfessor = idProfessor;
-        this.dataAdmissao = dataAdmissao;
+    public Professor() {
     }
 
-    public int getIdProfessor() {
+    public Professor(Integer idProfessor, Date dataAdmissao, Usuario usuario) {
+        this.idProfessor = idProfessor;
+        this.dataAdmissao = dataAdmissao;
+        this.usuario = usuario;
+    }
+
+    public Integer getIdProfessor() {
         return idProfessor;
     }
 
-    public void setIdProfessor(int idProfessor) {
+    public void setIdProfessor(Integer idProfessor) {
         this.idProfessor = idProfessor;
-    }
-
-    public static Professor obterProfessor(int idProfessor) throws ClassNotFoundException, SQLException {
-        return ProfessorDAO.obterProfessor(idProfessor);
-    }
-
-    public static List<Professor> obterProfessores() throws ClassNotFoundException, SQLException {
-        return ProfessorDAO.obterProfessores();
     }
 
     public Date getDataAdmissao() {
@@ -49,17 +47,27 @@ public class Professor extends Usuario {
         this.dataAdmissao = dataAdmissao;
     }
 
-    @Override
-    public void gravar() throws SQLException, ClassNotFoundException {
-        ProfessorDAO.gravar(this);
+    public Usuario getUsuario() {
+        return usuario;
     }
 
-    @Override
-    public void editar() throws SQLException, ClassNotFoundException {
-        ProfessorDAO.editar(this);
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
     }
 
-    public void excluir() throws SQLException, ClassNotFoundException {
-        ProfessorDAO.excluir(this);
+    public static Professor obterProfessor(Integer idProfessor) {
+        return ProfessorDAO.getInstancia().obterProfessor(idProfessor);
+    }
+
+    public static List<Professor> obterProfessores(){
+        return ProfessorDAO.getInstancia().obterProfessors();
+    }
+
+    public Professor gravar(){
+        return ProfessorDAO.getInstancia().gravar(this);
+    }
+
+    public Professor excluir() {
+        return ProfessorDAO.getInstancia().excluir(this.idProfessor);
     }
 }

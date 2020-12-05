@@ -5,7 +5,6 @@
  */
 package controller;
 
-import exception.TraduzirExcecao;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.logging.Level;
@@ -52,7 +51,7 @@ public class ManterPlanoController extends HttpServlet {
             request.setAttribute("operacao", operacao);
 
             if (!operacao.equals("Incluir")) {
-                int idPlano = Integer.parseInt(request.getParameter("idPlano"));
+                Integer idPlano = Integer.parseInt(request.getParameter("idPlano"));
                 Plano plano = Plano.obterPlano(idPlano);
                 request.setAttribute("plano", plano);
             }
@@ -63,8 +62,6 @@ public class ManterPlanoController extends HttpServlet {
             throw e;
         } catch (IOException e) {
             throw new ServletException(e);
-        } catch (ClassNotFoundException | SQLException ex) {
-            Logger.getLogger(ManterPlanoController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -118,7 +115,7 @@ public class ManterPlanoController extends HttpServlet {
     private void confirmarOperacao(HttpServletRequest request, HttpServletResponse response) throws SQLException, ServletException, IOException, ClassNotFoundException {
         String operacao = request.getParameter("operacao");
 
-        int idPlano = Integer.parseInt(request.getParameter("txtIdPlano"));
+        Integer idPlano = operacao.equals("Incluir") ? null : Integer.parseInt(request.getParameter("idPlano"));
         String nome = request.getParameter("txtNome");
         float valor = Float.parseFloat(request.getParameter("txtValor"));
         float taxaAdesao = Float.parseFloat(request.getParameter("txtTaxaAdesao"));
@@ -128,33 +125,12 @@ public class ManterPlanoController extends HttpServlet {
 
         try {
             Plano plano = new Plano(idPlano, nome, valor, taxaAdesao, parcelas, tipo, taxaJuros);
-            if (operacao.equals("Incluir")) {
-                plano.gravar();
-            }
-            if (operacao.equals("Editar")) {
-                plano.editar();
-            }
-            if (operacao.equals("Excluir")) {
-                plano.excluir();
-            }
+
+            plano = operacao.equals("Excluir") ? plano.excluir() : plano.gravar();
+
             RequestDispatcher view = request.getRequestDispatcher("PesquisaPlanoController");
             view.forward(request, response);
-        } catch (com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException ex) {
-            Plano plano;
-            if (!operacao.equals("Excluir")) {
-                plano = new Plano(idPlano, nome, valor, taxaAdesao, parcelas, tipo, taxaJuros);
-            } else {
-                plano = Plano.obterPlano(idPlano);
-            }
-
-            request.setAttribute("operacao", operacao);
-            request.setAttribute("plano", plano);
-            request.setAttribute("erro", "Erro: " + TraduzirExcecao.ex(ex.getMessage()));
-
-            RequestDispatcher view = request.getRequestDispatcher("/cadastrarPlano.jsp");
-            view.forward(request, response);
-
-        } catch (ServletException | IOException | SQLException | ClassNotFoundException ex) {
+        } catch (ServletException | IOException ex) {
             Logger.getLogger(ManterPlanoController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

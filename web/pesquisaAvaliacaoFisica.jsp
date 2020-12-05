@@ -7,13 +7,13 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>JSP Page</title>
+        <title>Virtual Gym - Avaliações</title>
     </head>
     <body>
         <form>
             <button type="submit" formaction="index.jsp">Menu</button>
         </form>
-        <h1>Pesquisa de Avaliação Fisica</h1>
+        <h1>Avaliações Fisica</h1>
 
         <table border=1>
             <tr>
@@ -29,8 +29,8 @@
                     <td><c:out value="${avaliacaoFisica.idAvaliacaoFisica}" /></td>
                     <td><c:out value="${avaliacaoFisica.dataAvaliacao}" /></td>
                     <td><c:out value="${avaliacaoFisica.dataReavaliacao}" /></td>
-                    <td><c:out value="${avaliacaoFisica.aluno.nome}" /></td>
-                    <td><c:out value="${avaliacaoFisica.professor.nome}" /></td>
+                    <td><c:out value="${avaliacaoFisica.aluno.usuario.nome}" /></td>
+                    <td><c:out value="${avaliacaoFisica.professor.usuario.nome}" /></td>
                     <td><a href="ManterAvaliacaoFisicaController?acao=prepararOperacao&operacao=Editar&idAvaliacaoFisica=<c:out value="${avaliacaoFisica.idAvaliacaoFisica}"/>">Editar</a></td>
                     <td><a href="ManterAvaliacaoFisicaController?acao=prepararOperacao&operacao=Excluir&idAvaliacaoFisica=<c:out value="${avaliacaoFisica.idAvaliacaoFisica}"/>">Excluir</a></td>
 

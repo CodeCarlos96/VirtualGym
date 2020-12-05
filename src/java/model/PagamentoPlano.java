@@ -1,67 +1,75 @@
 package model;
 
 import dao.PagamentoPlanoDAO;
-import java.sql.SQLException;
-import java.util.Date;
+import java.io.Serializable;
 import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
 
-public class PagamentoPlano extends Pagamento {
-    private int idPagamentoPlano;
-    
+@Entity
+@Table(name = "PagamentoPlano")
+public class PagamentoPlano implements Serializable {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer idPagamentoPlano;
+
+    @ManyToOne
     private MatriculaAcademia matriculaAcademia;
-    private int idMatriculaAcademia;
+    @OneToOne
+    private Pagamento pagamento;
 
-    public PagamentoPlano(int idPagamentoPlano, MatriculaAcademia matriculaAcademia, int idPagamento, int tipoPagamento, int parcelas, float valorPagamento, Date dataPagamento) {
-        super(idPagamento, tipoPagamento, parcelas, valorPagamento, dataPagamento);
-        this.idPagamentoPlano = idPagamentoPlano;
-        this.matriculaAcademia = matriculaAcademia;
+    public PagamentoPlano() {
     }
 
-    public int getIdPagamentoPlano() {
+    public PagamentoPlano(Integer idPagamentoPlano, MatriculaAcademia matriculaAcademia, Pagamento pagamento) {
+        this.idPagamentoPlano = idPagamentoPlano;
+        this.matriculaAcademia = matriculaAcademia;
+        this.pagamento = pagamento;
+    }
+
+    public Integer getIdPagamentoPlano() {
         return idPagamentoPlano;
     }
 
-    public void setIdPagamentoPlano(int idPagamentoPlano) {
+    public void setIdPagamentoPlano(Integer idPagamentoPlano) {
         this.idPagamentoPlano = idPagamentoPlano;
     }
 
-    public int getIdMatriculaAcademia() {
-        return idMatriculaAcademia;
-    }
-
-    public void setIdMatriculaAcademia(int idMatriculaAcademia) {
-        this.idMatriculaAcademia = idMatriculaAcademia;
-    }
-
-    public MatriculaAcademia getMatriculaAcademia() throws ClassNotFoundException, SQLException {
-        if((this.idMatriculaAcademia != 0) && (this.matriculaAcademia == null)){
-            this.matriculaAcademia = MatriculaAcademia.obterMatriculaAcademia(this.idMatriculaAcademia);
-        }
-        return this.matriculaAcademia;
+    public MatriculaAcademia getMatriculaAcademia() {
+        return matriculaAcademia;
     }
 
     public void setMatriculaAcademia(MatriculaAcademia matriculaAcademia) {
         this.matriculaAcademia = matriculaAcademia;
     }
 
-    public static PagamentoPlano obterPagamentoPlano(int idPagamentoPlano) throws ClassNotFoundException, SQLException {
-        return PagamentoPlanoDAO.obterPagamentoPlano(idPagamentoPlano);
+    public Pagamento getPagamento() {
+        return pagamento;
     }
 
-    public static List<PagamentoPlano> obterPagamentoPlanos() throws ClassNotFoundException, SQLException {
-        return PagamentoPlanoDAO.obterPagamentoPlanos();
+    public void setPagamento(Pagamento pagamento) {
+        this.pagamento = pagamento;
     }
-    
-    @Override
-    public void gravar() throws SQLException, ClassNotFoundException{
-        PagamentoPlanoDAO.gravar(this);
+
+    public static PagamentoPlano obterPagamentoPlano(Integer idPagamentoPlano) {
+        return PagamentoPlanoDAO.getInstancia().obterPagamentoPlano(idPagamentoPlano);
     }
-    
-    public void editar() throws SQLException, ClassNotFoundException{
-        PagamentoPlanoDAO.editar(this);
+
+    public static List<PagamentoPlano> obterPagamentoPlanos() {
+        return PagamentoPlanoDAO.getInstancia().obterPagamentoPlanos();
     }
-    
-    public void excluir() throws SQLException, ClassNotFoundException{
-        PagamentoPlanoDAO.excluir(this);
+
+    public PagamentoPlano gravar() {
+        return PagamentoPlanoDAO.getInstancia().gravar(this);
+    }
+
+    public PagamentoPlano excluir() {
+        return PagamentoPlanoDAO.getInstancia().excluir(this.idPagamentoPlano);
     }
 }

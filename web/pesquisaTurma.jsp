@@ -7,13 +7,13 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>JSP Page</title>
+        <title>Virtual Gym - Turmas</title>
     </head>
     <body>
         <form>
             <button type="submit" formaction="index.jsp">Menu</button>
         </form>
-        <h1>Pesquisa de Turma</h1>
+        <h1>Turmas</h1>
 
         <table border=1>
             <tr>
@@ -30,7 +30,7 @@
                     <td><c:out value="${turma.idTurma}" /></td>
                     <td><c:out value="${turma.aula.nome}" /></td>
                     <td><c:out value="${turma.sala.nome}" /></td>
-                    <td><c:out value="${turma.professor.nome}" /></td>
+                    <td><c:out value="${turma.professor.usuario.nome}" /></td>
                     <td><c:out value="${turma.sala.capacidade}" /></td>
                     <td><c:out value="${turma.matriculados}" /></td>
                     <td><a href="ManterTurmaController?acao=prepararOperacao&operacao=Editar&idTurma=<c:out value="${turma.idTurma}"/>">Editar</a></td>

@@ -6,7 +6,6 @@
 package controller;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -37,16 +36,12 @@ public class PesquisaExercicioFichaController extends HttpServlet {
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException, SQLException {
-        try {
-            int idFichaTreino = Integer.parseInt(request.getParameter("idFichaTreino"));
-            request.setAttribute("fichaTreino", FichaTreino.obterFichaTreino(idFichaTreino));
-            request.setAttribute("musculacoes", Musculacao.obterMusculacoes(idFichaTreino));
-            request.setAttribute("aerobicos", Aerobico.obterAerobicos(idFichaTreino));
-            RequestDispatcher view = request.getRequestDispatcher("/pesquisaExercicioFicha.jsp");
-            view.forward(request, response);
-        } catch (ClassNotFoundException | SQLException e) {
-            throw new ServletException(e);
-        }
+        int idFichaTreino = Integer.parseInt(request.getParameter("idFichaTreino"));
+        request.setAttribute("fichaTreino", FichaTreino.obterFichaTreino(idFichaTreino));
+        request.setAttribute("musculacoes", Musculacao.obterMusculacoes(idFichaTreino));
+        request.setAttribute("aerobicos", Aerobico.obterAerobicos(idFichaTreino));
+        RequestDispatcher view = request.getRequestDispatcher("/pesquisaExercicioFicha.jsp");
+        view.forward(request, response);
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">

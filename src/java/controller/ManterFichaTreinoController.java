@@ -5,7 +5,6 @@
  */
 package controller;
 
-import exception.TraduzirExcecao;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.text.ParseException;
@@ -17,10 +16,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import model.Aerobico;
 import model.Aluno;
 import model.FichaTreino;
-import model.Musculacao;
 import model.Professor;
 
 /**
@@ -61,7 +58,7 @@ public class ManterFichaTreinoController extends HttpServlet {
             request.setAttribute("professores", Professor.obterProfessores());
 
             if (!operacao.equals("Incluir")) {
-                int idFichaTreino = Integer.parseInt(request.getParameter("idFichaTreino"));
+                Integer idFichaTreino = Integer.parseInt(request.getParameter("idFichaTreino"));
                 FichaTreino fichaTreino = FichaTreino.obterFichaTreino(idFichaTreino);
                 request.setAttribute("fichaTreino", fichaTreino);
             }
@@ -125,7 +122,7 @@ public class ManterFichaTreinoController extends HttpServlet {
     private void confirmarOperacao(HttpServletRequest request, HttpServletResponse response) throws SQLException, ParseException, ServletException, IOException, ClassNotFoundException {
         String operacao = request.getParameter("operacao");
 
-        int idFichaTreino = Integer.parseInt(request.getParameter("txtIdFichaTreino"));
+        Integer idFichaTreino = operacao.equals("Incluir") ? null : Integer.parseInt(request.getParameter("idFichaTreino"));
 
         SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd");
         java.sql.Date dataInicio = new java.sql.Date(fmt.parse(request.getParameter("txtDataInicio")).getTime());
@@ -141,53 +138,24 @@ public class ManterFichaTreinoController extends HttpServlet {
 
         String observacao = request.getParameter("txtObservacao");
 
-        int idAluno = operacao.equals("Excluir") ? 0 : Integer.parseInt(request.getParameter("optAluno"));
-        int idProfessor = operacao.equals("Excluir") ? 0 : Integer.parseInt(request.getParameter("optProfessor"));
+        Integer idAluno = operacao.equals("Excluir") ? null : Integer.parseInt(request.getParameter("optAluno"));
+        Integer idProfessor = operacao.equals("Excluir") ? null : Integer.parseInt(request.getParameter("optProfessor"));
 
         try {
-            Aluno aluno = null;
-            Professor professor = null;
-            if (idAluno != 0) {
-                aluno = Aluno.obterAluno(idAluno);
-            }
-            if (idProfessor != 0) {
-                professor = Professor.obterProfessor(idProfessor);
-            }
+            Aluno aluno = Aluno.obterAluno(idAluno);
+            Professor professor = Professor.obterProfessor(idProfessor);
 
             FichaTreino fichaTreino = new FichaTreino(idFichaTreino, dataInicio, dataReavaliacao, dias, observacao, aluno, professor);
-            if (operacao.equals("Incluir")) {
-                fichaTreino.gravar();
-            }
-            if (operacao.equals("Editar")) {
-                fichaTreino.editar();
-            }
+            
             if (operacao.equals("Excluir")) {
                 fichaTreino.excluir();
+            }else{
+                fichaTreino.gravar();
             }
+            
             RequestDispatcher view = request.getRequestDispatcher("PesquisaFichaTreinoController");
             view.forward(request, response);
-        } catch (com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException ex) {
-            FichaTreino fichaTreino;
-            if (!operacao.equals("Excluir")) {
-                Aluno aluno = Aluno.obterAluno(idAluno);
-                Professor professor = Professor.obterProfessor(idProfessor);
-                fichaTreino = new FichaTreino(idFichaTreino, dataInicio, dataReavaliacao, dias, observacao, aluno, professor);
-            } else {
-                fichaTreino = FichaTreino.obterFichaTreino(idFichaTreino);
-            }
-
-            request.setAttribute("operacao", operacao);
-            request.setAttribute("alunos", Aluno.obterAlunos());
-            request.setAttribute("professores", Professor.obterProfessores());
-            request.setAttribute("fichaTreino", fichaTreino);
-            request.setAttribute("musculacoes", Musculacao.obterMusculacoes(fichaTreino.getIdFichaTreino()));
-            request.setAttribute("aerobicos", Aerobico.obterAerobicos(fichaTreino.getIdFichaTreino()));
-            request.setAttribute("erro", "Erro: " + TraduzirExcecao.ex(ex.getMessage()));
-
-            RequestDispatcher view = request.getRequestDispatcher("/cadastrarFichaTreino.jsp");
-            view.forward(request, response);
-
-        } catch (ServletException | IOException | SQLException | ClassNotFoundException ex) {
+        } catch (ServletException | IOException ex) {
             Logger.getLogger(ManterFichaTreinoController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

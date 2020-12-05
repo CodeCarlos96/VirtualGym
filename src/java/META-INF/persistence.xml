@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="2.1" xmlns="http://xmlns.jcp.org/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd">
+  <persistence-unit name="VirtualGymPU">
+    <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
+    <class>model.Administrador</class>
+    <class>model.Aerobico</class>
+    <class>model.Aluno</class>
+    <class>model.Aula</class>
+    <class>model.AvaliacaoFisica</class>
+    <class>model.Endereco</class>
+    <class>model.Entrada</class>
+    <class>model.Exercicio</class>
+    <class>model.FichaTreino</class>
+    <class>model.Horario</class>
+    <class>model.MatriculaAcademia</class>
+    <class>model.MatriculaAula</class>
+    <class>model.Musculacao</class>
+    <class>model.Pagamento</class>
+    <class>model.PagamentoAula</class>
+    <class>model.PagamentoPlano</class>
+    <class>model.Professor</class>
+    <class>model.Sala</class>
+    <class>model.Turma</class>
+    <class>model.Usuario</class>
+    <class>model.Plano</class>
+    <exclude-unlisted-classes>false</exclude-unlisted-classes>
+    <properties>
+      <property name="javax.persistence.jdbc.driver" value="com.mysql.jdbc.Driver"/>
+      <property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/virtualgym"/>
+      <property name="javax.persistence.jdbc.user" value="root"/>
+      <property name="javax.persistence.jdbc.password" value=""/>
+      <property name="javax.persistence.schema-generation.database.action" value="create"/>
+      <property name="eclipselink.logging.level.sql" value="FINE"/>
+      <property name="eclipselink.logging.parameters" value="true"/>
+    </properties>
+  </persistence-unit>
+</persistence>

@@ -1,28 +1,40 @@
-
 package model;
 
 import dao.SalaDAO;
-import java.sql.SQLException;
+import java.io.Serializable;
 import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
-public class Sala {
-    private int idSala;
+@Entity
+@Table(name = "Sala")
+public class Sala implements Serializable {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer idSala;
     private int capacidade;
     private String descricao;
     private String nome;
 
-    public Sala(int idSala, int capacidade, String descricao, String nome) {
+    public Sala() {
+    }
+
+    public Sala(Integer idSala, int capacidade, String descricao, String nome) {
         this.idSala = idSala;
         this.capacidade = capacidade;
         this.descricao = descricao;
         this.nome = nome;
     }
 
-    public int getIdSala() {
+    public Integer getIdSala() {
         return idSala;
     }
 
-    public void setIdSala(int idSala) {
+    public void setIdSala(Integer idSala) {
         this.idSala = idSala;
     }
 
@@ -50,23 +62,19 @@ public class Sala {
         this.nome = nome;
     }
 
-    public static Sala obterSala(int idSala) throws ClassNotFoundException, SQLException {
-        return SalaDAO.obterSala(idSala);
+    public static Sala obterSala(Integer idSala) {
+        return SalaDAO.getInstancia().obterSala(idSala);
     }
 
-    public static List<Sala> obterSalas() throws ClassNotFoundException, SQLException {
-        return SalaDAO.obterSalas();
+    public static List<Sala> obterSalas() {
+        return SalaDAO.getInstancia().obterSalas();
     }
-    
-    public void gravar() throws SQLException, ClassNotFoundException{
-        SalaDAO.gravar(this);
+
+    public Sala gravar() {
+        return SalaDAO.getInstancia().gravar(this);
     }
-    
-    public void editar() throws SQLException, ClassNotFoundException{
-        SalaDAO.editar(this);
-    }
-    
-    public void excluir() throws SQLException, ClassNotFoundException{
-        SalaDAO.excluir(this);
+
+    public Sala excluir() {
+        return SalaDAO.getInstancia().excluir(this.idSala);
     }
 }

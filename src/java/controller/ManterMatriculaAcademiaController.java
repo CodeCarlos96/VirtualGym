@@ -5,8 +5,8 @@
  */
 package controller;
 
-import exception.TraduzirExcecao;
 import java.io.IOException;
+import java.sql.Date;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -59,7 +59,7 @@ public class ManterMatriculaAcademiaController extends HttpServlet {
             request.setAttribute("alunos", Aluno.obterAlunos());
 
             if (!operacao.equals("Incluir")) {
-                int idMatriculaAcademia = Integer.parseInt(request.getParameter("idMatriculaAcademia"));
+                Integer idMatriculaAcademia = Integer.parseInt(request.getParameter("idMatriculaAcademia"));
                 MatriculaAcademia matriculaAcademia = MatriculaAcademia.obterMatriculaAcademia(idMatriculaAcademia);
                 request.setAttribute("matriculaAcademia", matriculaAcademia);
             }
@@ -123,58 +123,43 @@ public class ManterMatriculaAcademiaController extends HttpServlet {
     private void confirmarOperacao(HttpServletRequest request, HttpServletResponse response) throws ParseException, ServletException, IOException, ClassNotFoundException, SQLException {
         String operacao = request.getParameter("operacao");
 
-        int idMatriculaAcademia = Integer.parseInt(request.getParameter("txtIdMatriculaAcademia"));
+        Integer idMatriculaAcademia = operacao.equals("Incluir") ? null : Integer.parseInt(request.getParameter("idMatriculaAcademia"));
         int diaVencimento = Integer.parseInt(request.getParameter("txtDiaVencimento"));
 
         SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd");
-        java.sql.Date dataMatricula = new java.sql.Date(fmt.parse(request.getParameter("txtDataMatricula")).getTime());
+        Date dataMatricula = new Date(fmt.parse(request.getParameter("txtDataMatricula")).getTime());
 
-        int idAluno = operacao.equals("Excluir") ? 0 : Integer.parseInt(request.getParameter("optAluno"));
-        int idPlano = operacao.equals("Excluir") ? 0 : Integer.parseInt(request.getParameter("optPlano"));
+        Integer idAluno = operacao.equals("Excluir") ? 0 : Integer.parseInt(request.getParameter("optAluno"));
+        Integer idPlano = operacao.equals("Excluir") ? 0 : Integer.parseInt(request.getParameter("optPlano"));
 
         try {
-            Aluno aluno = null;
-            Plano plano = null;
-            if (idAluno != 0) {
-                aluno = Aluno.obterAluno(idAluno);
-            }
-            if (idPlano != 0) {
-                plano = Plano.obterPlano(idPlano);
-            }
-
+            Aluno aluno = Aluno.obterAluno(idAluno);
+            Plano plano = Plano.obterPlano(idPlano);
             MatriculaAcademia matriculaAcademia = new MatriculaAcademia(idMatriculaAcademia, dataMatricula, diaVencimento, aluno, plano);
-            if (operacao.equals("Incluir")) {
-                matriculaAcademia.gravar();
-            }
-            if (operacao.equals("Editar")) {
-                matriculaAcademia.editar();
-            }
+
             if (operacao.equals("Excluir")) {
                 matriculaAcademia.excluir();
-            }
-            RequestDispatcher view = request.getRequestDispatcher("PesquisaMatriculaAcademiaController");
-            view.forward(request, response);
-        } catch (com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException ex) {
-            MatriculaAcademia matriculaAcademia;
-            if (!operacao.equals("Excluir")) {
-                Aluno aluno = Aluno.obterAluno(idAluno);
-                Plano plano = Plano.obterPlano(idPlano);
-                matriculaAcademia = new MatriculaAcademia(idMatriculaAcademia, dataMatricula, diaVencimento, aluno, plano);
+            } else if (operacao.equals("Incluir") && MatriculaAcademia.matriculado(idAluno)) {
+                throw new Exception("Aluno já está matriculado");
             } else {
-                matriculaAcademia = MatriculaAcademia.obterMatriculaAcademia(idMatriculaAcademia);
+                matriculaAcademia.gravar();
             }
 
+            RequestDispatcher view = request.getRequestDispatcher("PesquisaMatriculaAcademiaController");
+            view.forward(request, response);
+        } catch (Exception ex) {
+            request.setAttribute("erro", ex.getLocalizedMessage());
             request.setAttribute("operacao", operacao);
             request.setAttribute("planos", Plano.obterPlanos());
             request.setAttribute("alunos", Aluno.obterAlunos());
+
+            Aluno aluno = Aluno.obterAluno(idAluno);
+            Plano plano = Plano.obterPlano(idPlano);
+            MatriculaAcademia matriculaAcademia = new MatriculaAcademia(idMatriculaAcademia, dataMatricula, diaVencimento, aluno, plano);
             request.setAttribute("matriculaAcademia", matriculaAcademia);
-            request.setAttribute("erro", "Erro: " + TraduzirExcecao.ex(ex.getMessage()));
 
             RequestDispatcher view = request.getRequestDispatcher("/cadastrarMatriculaAcademia.jsp");
             view.forward(request, response);
-
-        } catch (ServletException | IOException | SQLException | ClassNotFoundException ex) {
-            Logger.getLogger(ManterMatriculaAcademiaController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 }

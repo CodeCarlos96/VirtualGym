@@ -1,9 +1,6 @@
 function validarFormulario(form) {
     var mensagem;
     mensagem = "";
-    if (form.txtIdMatriculaAula.value == "") {
-        mensagem = mensagem + "Informe o Código da Matricula\n";
-    }
     if (form.txtDataMatricula.value == "") {
         mensagem = mensagem + "Informe a Data da Matricula\n";
     }

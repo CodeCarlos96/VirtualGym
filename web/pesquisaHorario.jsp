@@ -7,14 +7,14 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>JSP Page</title>
+        <title>Virtual Gym - Horários</title>
     </head>
     <body>
         <form>
             <button type="submit" formaction="index.jsp">Menu</button>
             <button type="submit" formaction="PesquisaTurmaController">Voltar</button>
         </form>
-        <h1>Horários da Turma (${turma.aula.nome} / ${turma.sala.nome})</h1>
+        <h1>Horários da Turma - (${turma.aula.nome} / ${turma.sala.nome})</h1>
 
         <table border=1>
             <tr>

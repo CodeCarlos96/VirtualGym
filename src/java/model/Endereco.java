@@ -1,20 +1,21 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package model;
 
 import dao.EnderecoDAO;
-import java.sql.SQLException;
+import java.io.Serializable;
 import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
-/**
- *
- * @author Aluno
- */
-public class Endereco {
-    private int idEndereco;
+@Entity
+@Table(name = "Endereco")
+public class Endereco implements Serializable {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer idEndereco;
     private String logradouro;
     private String bairro;
     private String cidade;
@@ -23,7 +24,10 @@ public class Endereco {
     private String complemento;
     private String numero;
 
-    public Endereco(int idEndereco, String logradouro, String bairro, String cidade, String uf, String cep, String complemento, String numero) {
+    public Endereco() {
+    }
+
+    public Endereco(Integer idEndereco, String logradouro, String bairro, String cidade, String uf, String cep, String complemento, String numero) {
         this.idEndereco = idEndereco;
         this.logradouro = logradouro;
         this.bairro = bairro;
@@ -34,11 +38,11 @@ public class Endereco {
         this.numero = numero;
     }
 
-    public int getIdEndereco() {
+    public Integer getIdEndereco() {
         return idEndereco;
     }
 
-    public void setIdEndereco(int idEndereco) {
+    public void setIdEndereco(Integer idEndereco) {
         this.idEndereco = idEndereco;
     }
 
@@ -97,24 +101,20 @@ public class Endereco {
     public void setNumero(String numero) {
         this.numero = numero;
     }
-    
-    public static Endereco obterEndereco(int idEndereco) throws ClassNotFoundException, SQLException{
-        return EnderecoDAO.obterEndereco(idEndereco);
+
+    public static Endereco obterEndereco(Integer idEndereco){
+        return EnderecoDAO.getInstancia().obterEndereco(idEndereco);
     }
-    
-    public static List<Endereco> obterEnderecos() throws ClassNotFoundException, SQLException{
-        return EnderecoDAO.obterEnderecos();
+
+    public static List<Endereco> obterEnderecos() {
+        return EnderecoDAO.getInstancia().obterEnderecos();
     }
-    
-    public void gravar() throws SQLException, ClassNotFoundException{
-        EnderecoDAO.gravar(this);
+
+    public Endereco gravar() {
+        return EnderecoDAO.getInstancia().gravar(this);
     }
-    
-    public void editar() throws SQLException, ClassNotFoundException{
-        EnderecoDAO.editar(this);
-    }
-    
-    public void excluir() throws SQLException, ClassNotFoundException{
-        EnderecoDAO.excluir(this);
+
+    public Endereco excluir() {
+        return EnderecoDAO.getInstancia().excluir(this.idEndereco);
     }
 }

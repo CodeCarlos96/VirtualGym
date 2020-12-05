@@ -6,89 +6,77 @@
 package model;
 
 import dao.EntradaDAO;
-import java.sql.SQLException;
-import java.util.Date;
+import java.io.Serializable;
+import java.sql.Timestamp;
 import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
-/**
- *
- * @author Aluno
- */
-public class Entrada {
-    private int idEntrada;
-    private Date dataEntrada;
-    private String horarioEntrada;
-    
+@Entity
+@Table(name = "Entrada")
+public class Entrada implements Serializable {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer idEntrada;
+    private Timestamp dataEntrada;
+    @ManyToOne
     private Aluno aluno;
-    private int idAluno;
 
-    public Entrada(int idEntrada, Date dataEntrada, String horarioEntrada, Aluno aluno) {
+    public Entrada() {
+    }
+
+    public Entrada(Integer idEntrada, Timestamp dataEntrada, Aluno aluno) {
         this.idEntrada = idEntrada;
         this.dataEntrada = dataEntrada;
-        this.horarioEntrada = horarioEntrada;
         this.aluno = aluno;
     }
 
-    public int getIdEntrada() {
+    public Integer getIdEntrada() {
         return idEntrada;
     }
 
-    public void setIdEntrada(int idEntrada) {
+    public void setIdEntrada(Integer idEntrada) {
         this.idEntrada = idEntrada;
     }
-    
-    public Date getDataEntrada() {
+
+    public Timestamp getDataEntrada() {
         return dataEntrada;
     }
 
-    public void setDataEntrada(Date dataEntrada) {
+    public void setDataEntrada(Timestamp dataEntrada) {
         this.dataEntrada = dataEntrada;
     }
 
-    public String getHorarioEntrada() {
-        return horarioEntrada;
-    }
-
-    public void setHorarioEntrada(String horarioEntrada) {
-        this.horarioEntrada = horarioEntrada;
-    }
-
-    public Aluno getAluno() throws ClassNotFoundException, SQLException {
-        if((this.idAluno != 0) && (this.aluno == null)){
-            this.aluno = Aluno.obterAluno(this.idAluno);
-        }
-        return this.aluno;
+    public Aluno getAluno() {
+        return aluno;
     }
 
     public void setAluno(Aluno aluno) {
         this.aluno = aluno;
     }
 
-    public int getIdAluno() {
-        return idAluno;
+    public static Entrada obterEntrada(Integer idEntrada) {
+        return EntradaDAO.getInstancia().obterEntrada(idEntrada);
     }
 
-    public void setIdAluno(int idAluno) {
-        this.idAluno = idAluno;
+    public static List<Entrada> obterEntradas() {
+        return EntradaDAO.getInstancia().obterEntradas();
     }
     
-    public static Entrada obterEntrada(int idEntrada) throws ClassNotFoundException, SQLException{
-        return EntradaDAO.obterEntrada(idEntrada);
+    public static List<Entrada> obterEntradasAluno(Integer idAluno) {
+        return EntradaDAO.getInstancia().obterEntradasAluno(idAluno);
     }
-    
-    public static List<Entrada> obterEntradas() throws ClassNotFoundException, SQLException{
-        return EntradaDAO.obterEntradas();
+
+    public Entrada gravar() {
+        return EntradaDAO.getInstancia().gravar(this);
     }
-    
-    public void gravar() throws SQLException, ClassNotFoundException{
-        EntradaDAO.gravar(this);
-    }
-    
-    public void editar() throws SQLException, ClassNotFoundException{
-        EntradaDAO.editar(this);
-    }
-    
-    public void excluir() throws SQLException, ClassNotFoundException{
-        EntradaDAO.excluir(this);
+
+    public Entrada excluir() {
+        return EntradaDAO.getInstancia().excluir(this.idEntrada);
     }
 }

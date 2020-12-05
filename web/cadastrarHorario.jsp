@@ -5,8 +5,7 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <script src="scripts/horario.js" charset="utf-8"></script>
-        <title>Virtual Gym</title>
+        <title>Virtual Gym - Cadastrar Horário</title>
     </head>
     <body>
         <a href="index.jsp"><button>Menu</button></a>
@@ -34,9 +33,10 @@
                     </tr>
                     <tr>
                         <td>Horário de Fim: </td><td><input type="time" name="txtHoraFim" value="${horario.horaFim}" <c:if test="${operacao == 'Excluir'}"> readonly </c:if>></td>
-                    </tr>
-                </table>
-                <input type="submit" name="btnConfirmar" value="Confirmar">
+                </tr>
+            </table>
+            <input type="submit" name="btnConfirmar" value="Confirmar">
         </form>
+        <script src="scripts/horario.js" charset="utf-8"></script>
     </body>
 </html>

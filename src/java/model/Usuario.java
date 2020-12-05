@@ -1,13 +1,23 @@
-
 package model;
 
 import dao.UsuarioDAO;
-import java.sql.SQLException;
-import java.util.Date;
+import java.io.Serializable;
+import java.sql.Date;
 import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
 
-public abstract class Usuario {
-    private int idUsuario;
+@Entity
+@Table(name = "Usuario")
+public class Usuario implements Serializable {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer idUsuario;
     private String email;
     private String senha;
     private String nome;
@@ -17,11 +27,13 @@ public abstract class Usuario {
     private Date dataNascimento;
     private String status;
     private String telefone;
-
-    private int idEndereco;
+    @OneToOne
     private Endereco endereco;
 
-    public Usuario(int idUsuario, String email, String senha, String nome, String cpf, String rg, String sexo, Date dataNascimento, String status, String telefone, Endereco endereco) {
+    public Usuario() {
+    }
+
+    public Usuario(Integer idUsuario, String email, String senha, String nome, String cpf, String rg, String sexo, Date dataNascimento, String status, String telefone, Endereco endereco) {
         this.idUsuario = idUsuario;
         this.email = email;
         this.senha = senha;
@@ -35,11 +47,11 @@ public abstract class Usuario {
         this.endereco = endereco;
     }
 
-    public int getIdUsuario() {
+    public Integer getIdUsuario() {
         return idUsuario;
     }
 
-    public void setIdUsuario(int idUsuario) {
+    public void setIdUsuario(Integer idUsuario) {
         this.idUsuario = idUsuario;
     }
 
@@ -115,38 +127,27 @@ public abstract class Usuario {
         this.telefone = telefone;
     }
 
-    public int getIdEndereco() {
-        return idEndereco;
-    }
-
-    public void setIdEndereco(int idEndereco) {
-        this.idEndereco = idEndereco;
-    }
-
-    public Endereco getEndereco() throws ClassNotFoundException, SQLException {
-        if ((this.getIdEndereco() != 0) && (this.endereco == null)) {
-            this.endereco = Endereco.obterEndereco(this.idEndereco);
-        }
-        return this.endereco;
+    public Endereco getEndereco() {
+        return endereco;
     }
 
     public void setEndereco(Endereco endereco) {
         this.endereco = endereco;
     }
 
-    public static Usuario obterUsuario(int idUsuario) throws ClassNotFoundException, SQLException {
-        return UsuarioDAO.obterUsuario(idUsuario);
+    public static Usuario obterUsuario(Integer idUsuario) {
+        return UsuarioDAO.getInstancia().obterUsuario(idUsuario);
     }
-    
-    public static List<Usuario> obterUsuarios() throws ClassNotFoundException, SQLException {
-        return UsuarioDAO.obterUsuarios();
+
+    public static List<Usuario> obterUsuarios() {
+        return UsuarioDAO.getInstancia().obterUsuarios();
     }
-    
-    public void gravar() throws SQLException, ClassNotFoundException{
-        UsuarioDAO.gravar(this);
+
+    public Usuario gravar() {
+        return UsuarioDAO.getInstancia().gravar(this);
     }
-    
-    public void editar() throws SQLException, ClassNotFoundException{
-        UsuarioDAO.editar(this);
+
+    public Usuario excluir() {
+        return UsuarioDAO.getInstancia().excluir(this.idUsuario);
     }
 }

@@ -1,214 +1,149 @@
 package dao;
 
-import static dao.DAO.fecharConexao;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Types;
-import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.EntityManager;
+import model.FichaTreino;
 import model.Musculacao;
 
 public class MusculacaoDAO {
 
-    public static void gravar(Musculacao musculacao) throws SQLException, ClassNotFoundException {
-        Connection conexao = null;
-        PreparedStatement comando = null;
+    private static MusculacaoDAO instancia = new MusculacaoDAO();
 
-        try {
-            conexao = BD.getConexao();
-
-            if (musculacao.getOrdem() <= Musculacao.obterOrdem(musculacao.getFichaTreino().getIdFichaTreino())) {
-                comando = conexao.prepareStatement(
-                        "update Musculacao set ordem=(ordem+1) where FichaTreino_idFichaTreino="
-                        + musculacao.getFichaTreino().getIdFichaTreino()
-                        + " and ordem >= " + musculacao.getOrdem()
-                );
-                comando.executeUpdate();
-            }
-
-            comando = conexao.prepareStatement(
-                    "insert into Musculacao values (default, ?, ?, ?, ?, ?, ?)"
-            );
-            comando.setInt(1, musculacao.getOrdem());
-            comando.setInt(2, musculacao.getSeries());
-            comando.setInt(3, musculacao.getPeso());
-            comando.setInt(4, musculacao.getRepeticoes());
-
-            if (musculacao.getFichaTreino() == null) {
-                comando.setNull(5, Types.INTEGER);
-            } else {
-                comando.setInt(5, musculacao.getFichaTreino().getIdFichaTreino());
-            }
-            if (musculacao.getExercicio() == null) {
-                comando.setNull(6, Types.INTEGER);
-            } else {
-                comando.setInt(6, musculacao.getExercicio().getIdExercicio());
-            }
-
-            comando.executeUpdate();
-
-            ResultSet rs = comando.executeQuery("select LAST_INSERT_ID()");
-            rs.first();
-            musculacao.setIdMusculacao(rs.getInt(1));
-        } finally {
-            fecharConexao(conexao, comando);
-        }
+    private MusculacaoDAO() {
     }
 
-    public static void editar(Musculacao musculacao) throws SQLException, ClassNotFoundException {
-        Connection conexao = null;
-        PreparedStatement comando = null;
-        Statement comandoOrdem;
-
-        try {
-            conexao = BD.getConexao();
-            comandoOrdem = conexao.createStatement();
-
-            ResultSet rs = comandoOrdem.executeQuery("select ordem from Musculacao where idMusculacao = " + musculacao.getIdMusculacao());
-            rs.first();
-            int antigaOrdem = rs.getInt(1);
-
-            if (musculacao.getOrdem() > antigaOrdem) {
-                comando = conexao.prepareStatement(
-                        "update Musculacao set ordem=(ordem-1) where FichaTreino_idFichaTreino="
-                        + musculacao.getFichaTreino().getIdFichaTreino()
-                        + " and ordem between " + antigaOrdem + " and " + musculacao.getOrdem()
-                );
-                comando.executeUpdate();
-            }
-            if (musculacao.getOrdem() < antigaOrdem) {
-                comando = conexao.prepareStatement(
-                        "update Musculacao set ordem=(ordem+1) where FichaTreino_idFichaTreino="
-                        + musculacao.getFichaTreino().getIdFichaTreino()
-                        + " and ordem between " + musculacao.getOrdem() + " and " + antigaOrdem
-                );
-                comando.executeUpdate();
-            }
-
-            comando = conexao.prepareStatement(
-                    "update Musculacao set ordem=?, series=?, peso=?, repeticoes=?, FichaTreino_idFichaTreino=?, Exercicio_idExercicio=? where idMusculacao=?"
-            );
-            comando.setInt(1, musculacao.getOrdem());
-            comando.setInt(2, musculacao.getSeries());
-            comando.setInt(3, musculacao.getPeso());
-            comando.setInt(4, musculacao.getRepeticoes());
-
-            if (musculacao.getFichaTreino() == null) {
-                comando.setNull(5, Types.INTEGER);
-            } else {
-                comando.setInt(5, musculacao.getFichaTreino().getIdFichaTreino());
-            }
-            if (musculacao.getExercicio() == null) {
-                comando.setNull(6, Types.INTEGER);
-            } else {
-                comando.setInt(6, musculacao.getExercicio().getIdExercicio());
-            }
-            comando.setInt(7, musculacao.getIdMusculacao());
-
-            comando.executeUpdate();
-
-        } finally {
-            fecharConexao(conexao, comando);
-        }
+    public static MusculacaoDAO getInstancia() {
+        return instancia;
     }
 
-    public static void excluir(Musculacao musculacao) throws SQLException, ClassNotFoundException {
-        Connection conexao = null;
-        Statement comando = null;
-        String stringSQL;
+    public Musculacao gravar(Musculacao musculacao) {
+        EntityManager em = new ConexaoFactory().getConexao();
         try {
-            conexao = BD.getConexao();
-            comando = conexao.createStatement();
-
-            stringSQL = "update Musculacao set ordem=(ordem-1) where FichaTreino_idFichaTreino="
-                    + musculacao.getFichaTreino().getIdFichaTreino()
-                    + " and ordem > " + musculacao.getOrdem();
-            comando.execute(stringSQL);
-
-            stringSQL = "delete from musculacao where idMusculacao = " + musculacao.getIdMusculacao();
-            comando.execute(stringSQL);
-        } finally {
-            fecharConexao(conexao, comando);
-        }
-    }
-
-    public static int obterOrdem(int idFichaTreino) throws SQLException, ClassNotFoundException {
-        Connection conexao = null;
-        Statement comando = null;
-        int ordem;
-        try {
-            conexao = BD.getConexao();
-            comando = conexao.createStatement();
-
-            ResultSet rs = comando.executeQuery("select count(musculacao.idMusculacao) from Musculacao where FichaTreino_idFichaTreino = " + idFichaTreino);
-            rs.first();
-            ordem = rs.getInt(1);
-        } finally {
-            fecharConexao(conexao, comando);
-        }
-        return ordem;
-    }
-
-    public static List<Musculacao> obterMusculacoes(int idFichaTreino)
-            throws ClassNotFoundException, SQLException {
-        Connection conexao = null;
-        Statement comando = null;
-        List<Musculacao> musculacoes = new ArrayList<>();
-        Musculacao musculacao;
-        try {
-            conexao = BD.getConexao();
-            comando = conexao.createStatement();
-            ResultSet rs;
-            if (idFichaTreino != 0) {
-                rs = comando.executeQuery("select * from Musculacao where FichaTreino_idFichaTreino = " + idFichaTreino + " order by ordem");
+            em.getTransaction().begin();
+            if (musculacao.getIdMusculacao() == null) {
+                atualizarOrdem(musculacao, em, true);
+                em.persist(musculacao);
             } else {
-                rs = comando.executeQuery("select * from Musculacao");
+                atualizarOrdem(musculacao, em, false);
+                em.merge(musculacao);
             }
-            while (rs.next()) {
-                musculacao = instanciarMusculacao(rs);
-                musculacoes.add(musculacao);
-            }
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+            System.err.println(e);
         } finally {
-            fecharConexao(conexao, comando);
+            em.close();
+        }
+        return musculacao;
+    }
+
+    public Musculacao excluir(Integer idMusculacao) {
+        EntityManager em = new ConexaoFactory().getConexao();
+        Musculacao musculacao = null;
+        try {
+            musculacao = em.find(Musculacao.class, idMusculacao);
+            em.getTransaction().begin();
+            em.remove(musculacao);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+            System.err.println(e);
+        } finally {
+            em.close();
+        }
+        return musculacao;
+    }
+
+    public void excluirExerciciosFicha(FichaTreino fichaTreino, EntityManager em) throws Exception {
+        em.createQuery(
+                "DELETE FROM Musculacao m WHERE m.fichaTreino = :fichaTreino")
+                .setParameter("fichaTreino", fichaTreino)
+                .executeUpdate();
+    }
+
+    public Musculacao obterMusculacao(Integer idMusculacao) {
+        EntityManager em = new ConexaoFactory().getConexao();
+        Musculacao musculacao = null;
+        try {
+            musculacao = em.find(Musculacao.class, idMusculacao);
+        } catch (Exception e) {
+            System.err.println(e);
+        } finally {
+            em.close();
+        }
+        return musculacao;
+    }
+
+    public List<Musculacao> obterMusculacaos(Integer idFichaTreino) {
+        EntityManager em = new ConexaoFactory().getConexao();
+        List<Musculacao> musculacoes = null;
+        try {
+            musculacoes = em.createQuery("SELECT m FROM Musculacao m"
+                    + " WHERE m.fichaTreino = :fichaTreino"
+                    + " ORDER BY m.ordem")
+                    .setParameter("fichaTreino", FichaTreino.obterFichaTreino(idFichaTreino))
+                    .getResultList();
+        } catch (Exception e) {
+            System.err.println(e);
+        } finally {
+            em.close();
         }
         return musculacoes;
     }
 
-    public static Musculacao obterMusculacao(int idMusculacao) throws ClassNotFoundException, SQLException {
-        Connection conexao = null;
-        Statement comando = null;
-        Musculacao musculacao = null;
+    public int obterOrdem(Integer idFichaTreino) {
+        EntityManager em = new ConexaoFactory().getConexao();
+        long ordem = 0;
         try {
-            conexao = BD.getConexao();
-            comando = conexao.createStatement();
-            ResultSet rs = comando.executeQuery("select * from musculacao where idMusculacao = " + idMusculacao);
-            rs.first();
-            musculacao = instanciarMusculacao(rs);
+            ordem = (long) em.createQuery("SELECT COUNT(m) FROM Musculacao m"
+                    + " WHERE m.fichaTreino = :fichaTreino")
+                    .setParameter("fichaTreino", FichaTreino.obterFichaTreino(idFichaTreino))
+                    .getSingleResult();
+        } catch (Exception e) {
+            System.err.println(e);
         } finally {
-            fecharConexao(conexao, comando);
+            em.close();
         }
-        return musculacao;
+        return Math.toIntExact(ordem);
     }
 
-    public static Musculacao instanciarMusculacao(ResultSet rs) throws SQLException {
-        Musculacao musculacao;
-        try {
-            musculacao = new Musculacao(rs.getInt("ordem"),
-                    rs.getInt("series"),
-                    rs.getInt("peso"),
-                    rs.getInt("repeticoes"),
-                    null, null) {
-            };
-            musculacao.setIdMusculacao(rs.getInt("idMusculacao"));
-            musculacao.setIdExercicio(rs.getInt("Exercicio_idExercicio"));
-            musculacao.setIdFichaTreino(rs.getInt("FichaTreino_idFichaTreino"));
-        } catch (SQLException ex) {
-            musculacao = null;
-        }
-        return musculacao;
-    }
+    public void atualizarOrdem(Musculacao musculacao, EntityManager em, boolean gravar) throws Exception {
+        if (gravar) {
+            if (musculacao.getOrdem() <= Musculacao.obterOrdem(musculacao.getFichaTreino().getIdFichaTreino())) {
+                em.createQuery(
+                        "UPDATE Musculacao a SET a.ordem = (a.ordem + 1) WHERE a.fichaTreino = :fichaTreino AND a.ordem >= :ordem")
+                        .setParameter("fichaTreino", musculacao.getFichaTreino())
+                        .setParameter("ordem", musculacao.getOrdem())
+                        .executeUpdate();
+            }
+        } else {
+            int antigaOrdem = (int) em.createQuery("SELECT a.ordem FROM Musculacao a"
+                    + " WHERE a.idMusculacao = :idMusculacao")
+                    .setParameter("idMusculacao", musculacao.getIdMusculacao())
+                    .getSingleResult();
 
+            if (musculacao.getOrdem() > antigaOrdem) {
+                em.createQuery(
+                        "UPDATE Musculacao a SET a.ordem = (a.ordem - 1)"
+                        + " WHERE a.fichaTreino = :fichaTreino"
+                        + " AND a.ordem BETWEEN :antigaOrdem"
+                        + " AND :ordem")
+                        .setParameter("fichaTreino", musculacao.getFichaTreino())
+                        .setParameter("antigaOrdem", antigaOrdem)
+                        .setParameter("ordem", musculacao.getOrdem())
+                        .executeUpdate();
+            }
+            if (musculacao.getOrdem() < antigaOrdem) {
+                em.createQuery(
+                        "UPDATE Musculacao a SET a.ordem = (a.ordem + 1)"
+                        + " WHERE a.fichaTreino = :fichaTreino"
+                        + " AND a.ordem BETWEEN :ordem"
+                        + " AND :antigaOrdem")
+                        .setParameter("fichaTreino", musculacao.getFichaTreino())
+                        .setParameter("ordem", musculacao.getOrdem())
+                        .setParameter("antigaOrdem", antigaOrdem)
+                        .executeUpdate();
+            }
+        }
+    }
 }

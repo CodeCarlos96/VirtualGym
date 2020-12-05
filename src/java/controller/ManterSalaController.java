@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package controller;
 
 import java.io.IOException;
@@ -16,10 +11,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import model.Sala;
 
-/**
- *
- * @author Dudu
- */
 public class ManterSalaController extends HttpServlet {
 
     /**
@@ -51,7 +42,7 @@ public class ManterSalaController extends HttpServlet {
             request.setAttribute("operacao", operacao);
 
             if (!operacao.equals("Incluir")) {
-                int idSala = Integer.parseInt(request.getParameter("idSala"));
+                Integer idSala = Integer.parseInt(request.getParameter("idSala"));
                 Sala sala = Sala.obterSala(idSala);
                 request.setAttribute("sala", sala);
             }
@@ -62,8 +53,6 @@ public class ManterSalaController extends HttpServlet {
             throw e;
         } catch (IOException e) {
             throw new ServletException(e);
-        } catch (ClassNotFoundException | SQLException ex) {
-            Logger.getLogger(ManterSalaController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -117,40 +106,27 @@ public class ManterSalaController extends HttpServlet {
     private void confirmarOperacao(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, ClassNotFoundException, SQLException {
         String operacao = request.getParameter("operacao");
 
-        int idSala = Integer.parseInt(request.getParameter("txtIdSala"));
+        Integer idSala = operacao.equals("Incluir") ? null : Integer.parseInt(request.getParameter("idSala"));
         String nome = request.getParameter("txtNome");
         int capacidade = Integer.parseInt(request.getParameter("txtCapacidadeSala"));
         String descricao = request.getParameter("txtDescricaoSala");
 
         try {
-            Sala sala = new Sala(idSala, capacidade, descricao, nome);
-            if (operacao.equals("Incluir")) {
-                sala.gravar();
-            }
-            if (operacao.equals("Editar")) {
-                sala.editar();
-            }
+            Sala sala = new Sala();
+            sala.setIdSala(idSala);
+            sala.setNome(nome);
+            sala.setDescricao(descricao);
+            sala.setCapacidade(capacidade);
+
             if (operacao.equals("Excluir")) {
                 sala.excluir();
+            } else {
+                sala.gravar();
             }
+            
             RequestDispatcher view = request.getRequestDispatcher("PesquisaSalaController");
             view.forward(request, response);
-        } catch (com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException ex) {
-            Sala sala;
-            if (!operacao.equals("Excluir")) {
-                sala = new Sala(idSala, capacidade, descricao, nome);
-            } else {
-                sala = Sala.obterSala(idSala);
-            }
-
-            request.setAttribute("sala", sala);
-            request.setAttribute("operacao", operacao);
-            request.setAttribute("erro", "Erro: " + ex.getMessage());
-
-            RequestDispatcher view = request.getRequestDispatcher("/cadastrarSala.jsp");
-            view.forward(request, response);
-
-        } catch (ServletException | IOException | SQLException | ClassNotFoundException ex) {
+        } catch (ServletException | IOException ex) {
             Logger.getLogger(ManterSalaController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

@@ -1,38 +1,46 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package model;
 
 import dao.HorarioDAO;
-import java.sql.SQLException;
+import java.io.Serializable;
 import java.util.List;
-/**
- *
- * @author Dudu
- */
-public class Horario {
-    private int idHorario;
+import javax.persistence.Entity;
+import javax.persistence.EntityManager;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+
+@Entity
+@Table(name = "Horario")
+public class Horario implements Serializable {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer idHorario;
     private String dia;
     private String horaInicio;
     private String horaFim;
     
+    @ManyToOne
     private Turma turma;
-    private int idTurma;
 
-    public Horario(String dia, String horaInicio, String horaFim, Turma turma) {
+    public Horario() {
+    }
+
+    public Horario(Integer idHorario, String dia, String horaInicio, String horaFim, Turma turma) {
+        this.idHorario = idHorario;
         this.dia = dia;
         this.horaInicio = horaInicio;
         this.horaFim = horaFim;
         this.turma = turma;
     }
 
-    public int getIdHorario() {
+    public Integer getIdHorario() {
         return idHorario;
     }
 
-    public void setIdHorario(int idHorario) {
+    public void setIdHorario(Integer idHorario) {
         this.idHorario = idHorario;
     }
 
@@ -60,46 +68,31 @@ public class Horario {
         this.horaFim = horaFim;
     }
 
-    public Turma getTurma() throws ClassNotFoundException, SQLException {
-        if ((this.getIdTurma() != 0) && (this.turma == null)) {
-            this.turma = Turma.obterTurma(this.idTurma);
-        }
-        return this.turma;
+    public Turma getTurma() {
+        return turma;
     }
 
     public void setTurma(Turma turma) {
         this.turma = turma;
     }
 
-    public int getIdTurma() {
-        return idTurma;
+    public static Horario obterHorario(Integer idHorario) {
+        return HorarioDAO.getInstancia().obterHorario(idHorario);
     }
 
-    public void setIdTurma(int idTurma) {
-        this.idTurma = idTurma;
+    public static List<Horario> obterHorarios(Integer idTurma) {
+        return HorarioDAO.getInstancia().obterHorarios(idTurma);
     }
-    
-    public static Horario obterHorario(int idHorario) throws ClassNotFoundException, SQLException{
-        return HorarioDAO.obterHorario(idHorario);
+
+    public Horario gravar() {
+        return HorarioDAO.getInstancia().gravar(this);
     }
-    
-    public static List<Horario> obterHorarios(int idTurma) throws ClassNotFoundException, SQLException{
-        return HorarioDAO.obterHorarios(idTurma);
+
+    public Horario excluir() {
+        return HorarioDAO.getInstancia().excluir(this.idHorario);
     }
-    
-    public void gravar() throws SQLException, ClassNotFoundException{
-        HorarioDAO.gravar(this);
-    }
-    
-    public void editar() throws SQLException, ClassNotFoundException{
-        HorarioDAO.editar(this);
-    }
-    
-    public void excluir() throws SQLException, ClassNotFoundException{
-        HorarioDAO.excluir(this);
-    }
-    
-    public static void excluirHorarioTurma(int idTurma) throws SQLException, ClassNotFoundException{
-        HorarioDAO.excluirHorarioTurma(idTurma);
+
+    public static void excluirHorarioTurma(Turma turma, EntityManager em) throws Exception {
+        HorarioDAO.getInstancia().excluirHorarioTurma(turma, em);
     }
 }

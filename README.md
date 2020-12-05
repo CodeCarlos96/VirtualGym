@@ -1,2 +1,2 @@
 # VirtualGym
-Gym management system, developed in the programming language discipline. Contributors: @VitorHugoIF @wesleirocha13, @codecarlos96
+Gym management system, developed in the programming language discipline. Contributors: @wesleirocha13, @codecarlos96

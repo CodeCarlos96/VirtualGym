@@ -1,20 +1,21 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package model;
 
 import dao.PlanoDAO;
-import java.sql.SQLException;
+import java.io.Serializable;
 import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
-/**
- *
- * @author Aluno
- */
-public class Plano {
-    private int idPlano;
+@Entity
+@Table(name = "Plano")
+public class Plano implements Serializable {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer idPlano;
     private String nome;
     private float valor;
     private float taxaAdesao;
@@ -22,30 +23,25 @@ public class Plano {
     private String tipo;
     private float taxaJuros;
 
-    public Plano(int idPlano, String nome, float valor, float taxaAdesao, int parcelas, String tipo, float taxaJuros) {
+    public Plano() {
+    }
+
+    public Plano(Integer idPlano, String nome, float valor, float taxaAdesao, int parcelas, String tipo, float taxaJuros) {
         this.idPlano = idPlano;
         this.nome = nome;
         this.valor = valor;
         this.taxaAdesao = taxaAdesao;
         this.parcelas = parcelas;
-        this.taxaJuros = taxaJuros;
         this.tipo = tipo;
-    }
-
-    public float getTaxaJuros() {
-        return taxaJuros;
-    }
-
-    public void setTaxaJuros(float taxaJuros) {
         this.taxaJuros = taxaJuros;
     }
 
-    public int getIdPlano() {
+    public Integer getIdPlano() {
         return idPlano;
     }
 
-    public void setIdPlano(int id) {
-        this.idPlano = id;
+    public void setIdPlano(Integer idPlano) {
+        this.idPlano = idPlano;
     }
 
     public String getNome() {
@@ -87,24 +83,28 @@ public class Plano {
     public void setTipo(String tipo) {
         this.tipo = tipo;
     }
-    
-    public static Plano obterPlano(int idPlano) throws ClassNotFoundException, SQLException{
-        return PlanoDAO.obterPlano(idPlano);
+
+    public float getTaxaJuros() {
+        return taxaJuros;
     }
-    
-    public static List<Plano> obterPlanos() throws ClassNotFoundException, SQLException{
-        return PlanoDAO.obterPlanos();
+
+    public void setTaxaJuros(float taxaJuros) {
+        this.taxaJuros = taxaJuros;
     }
-    
-    public void gravar() throws SQLException, ClassNotFoundException{
-        PlanoDAO.gravar(this);
+
+    public static Plano obterPlano(Integer idPlano) {
+        return PlanoDAO.getInstancia().obterPlano(idPlano);
     }
-    
-    public void editar() throws SQLException, ClassNotFoundException{
-        PlanoDAO.editar(this);
+
+    public static List<Plano> obterPlanos() {
+        return PlanoDAO.getInstancia().obterPlanos();
     }
-    
-    public void excluir() throws SQLException, ClassNotFoundException{
-        PlanoDAO.excluir(this);
+
+    public Plano gravar() {
+        return PlanoDAO.getInstancia().gravar(this);
+    }
+
+    public Plano excluir() {
+        return PlanoDAO.getInstancia().excluir(this.idPlano);
     }
 }

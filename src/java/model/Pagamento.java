@@ -1,22 +1,22 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package model;
 
 import dao.PagamentoDAO;
-import java.sql.SQLException;
-import java.util.Date;
+import java.io.Serializable;
+import java.sql.Date;
 import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
-/**
- *
- * @author Dudu
- */
-public abstract class Pagamento {
+@Entity
+@Table(name = "Pagamento")
+public class Pagamento implements Serializable {
 
-    private int idPagamento;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer idPagamento;
     private int tipoPagamento;
     private int parcelas;
     private float valorPagamento;
@@ -26,19 +26,26 @@ public abstract class Pagamento {
     private String numeroCartao;
     private String cvv;
 
-    public Pagamento(int idPagamento, int tipoPagamento, int parcelas, float valorPagamento, Date dataPagamento) {
+    public Pagamento() {
+    }
+
+    public Pagamento(Integer idPagamento, int tipoPagamento, int parcelas, float valorPagamento, Date dataPagamento, String nomeCartao, String dataValidade, String numeroCartao, String cvv) {
         this.idPagamento = idPagamento;
         this.tipoPagamento = tipoPagamento;
         this.parcelas = parcelas;
         this.valorPagamento = valorPagamento;
         this.dataPagamento = dataPagamento;
+        this.nomeCartao = nomeCartao;
+        this.dataValidade = dataValidade;
+        this.numeroCartao = numeroCartao;
+        this.cvv = cvv;
     }
 
-    public int getIdPagamento() {
+    public Integer getIdPagamento() {
         return idPagamento;
     }
 
-    public void setIdPagamento(int idPagamento) {
+    public void setIdPagamento(Integer idPagamento) {
         this.idPagamento = idPagamento;
     }
 
@@ -106,23 +113,19 @@ public abstract class Pagamento {
         this.cvv = cvv;
     }
 
-    public static Pagamento obterPagamento(int idPagamento) throws ClassNotFoundException, SQLException {
-        return PagamentoDAO.obterPagamento(idPagamento);
+    public static Pagamento obterPagamento(Integer idPagamento) {
+        return PagamentoDAO.getInstancia().obterPagamento(idPagamento);
     }
 
-    public static List<Pagamento> obterPagamentos() throws ClassNotFoundException, SQLException {
-        return PagamentoDAO.obterPagamentos();
+    public static List<Pagamento> obterPagamentos() {
+        return PagamentoDAO.getInstancia().obterPagamentos();
     }
-    
-    public void gravar() throws SQLException, ClassNotFoundException{
-        PagamentoDAO.gravar(this);
+
+    public Pagamento gravar() {
+        return PagamentoDAO.getInstancia().gravar(this);
     }
-    
-    public void editar() throws SQLException, ClassNotFoundException{
-        PagamentoDAO.editar(this);
-    }
-    
-    public void excluir() throws SQLException, ClassNotFoundException{
-        PagamentoDAO.excluir(this);
+
+    public Pagamento excluir() {
+        return PagamentoDAO.getInstancia().excluir(this.idPagamento);
     }
 }

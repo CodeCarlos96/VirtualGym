@@ -1,9 +1,6 @@
 function validarFormulario(form) {
     var mensagem;
     mensagem = "";
-    if (form.txtIdPlano.value == "") {
-        mensagem = mensagem + "Informe o Código do Plano\n";
-    }
     if (form.txtNome.value == "") {
         mensagem = mensagem + "Informe o Nome do Plano\n";
     }

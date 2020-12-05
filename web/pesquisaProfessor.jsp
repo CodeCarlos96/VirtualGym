@@ -7,13 +7,13 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>JSP Page</title>
+        <title>Virtual Gym - Professores</title>
     </head>
     <body>
         <form>
             <button type="submit" formaction="index.jsp">Menu</button>
         </form>
-        <h1>Pesquisa de Professores</h1>
+        <h1>Professores</h1>
 
         <table border=1>
             <tr>
@@ -26,9 +26,9 @@
             <c:forEach items="${professores}" var="professor">
                 <tr>
                     <td><c:out value="${professor.idProfessor}" /></td>
-                    <td><c:out value="${professor.nome}" /></td>
+                    <td><c:out value="${professor.usuario.nome}" /></td>
                     <td><c:out value="${professor.dataAdmissao}" /></td>
-                    <td><c:out value="${professor.status}" /></td>
+                    <td><c:out value="${professor.usuario.status}" /></td>
                     <td><a href="ManterProfessorController?acao=prepararOperacao&operacao=Editar&idProfessor=<c:out value="${professor.idProfessor}"/>">Editar</a></td>
                     <td><a href="ManterProfessorController?acao=prepararOperacao&operacao=Excluir&idProfessor=<c:out value="${professor.idProfessor}"/>">Excluir</a></td>
                 </tr>

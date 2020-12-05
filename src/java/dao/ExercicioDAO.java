@@ -2,156 +2,114 @@ package dao;
 
 import static dao.DAO.fecharConexao;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.EntityManager;
 import model.Exercicio;
 
 public class ExercicioDAO {
 
-    public static void gravar(Exercicio exercicio) throws SQLException, ClassNotFoundException {
-        Connection conexao = null;
-        PreparedStatement comando = null;
+    private static ExercicioDAO instancia = new ExercicioDAO();
 
-        try {
-            conexao = BD.getConexao();
-            comando = conexao.prepareStatement(
-                    "insert into Exercicio (idExercicio, nome, tipoTreino) values (?, ?, ?)"
-            );
-            comando.setInt(1, exercicio.getIdExercicio());
-            comando.setString(2, exercicio.getNome());
-            comando.setString(3, exercicio.getTipoTreino());
-
-            comando.executeUpdate();
-        } finally {
-            fecharConexao(conexao, comando);
-        }
+    private ExercicioDAO() {
     }
 
-    public static void editar(Exercicio exercicio) throws SQLException, ClassNotFoundException {
-        Connection conexao = null;
-        PreparedStatement comando = null;
-
-        try {
-            conexao = BD.getConexao();
-            comando = conexao.prepareStatement(
-                    "update Exercicio set nome=?, tipoTreino=? where idExercicio=?"
-            );
-            comando.setString(1, exercicio.getNome());
-            comando.setString(2, exercicio.getTipoTreino());
-            comando.setInt(3, exercicio.getIdExercicio());
-
-            comando.executeUpdate();
-
-        } finally {
-            fecharConexao(conexao, comando);
-        }
+    public static ExercicioDAO getInstancia() {
+        return instancia;
     }
 
-    public static void excluir(Exercicio exercicio) throws SQLException, ClassNotFoundException {
-        Connection conexao = null;
-        Statement comando = null;
-        String stringSQL;
+    public Exercicio gravar(Exercicio exercicio) {
+        EntityManager em = new ConexaoFactory().getConexao();
         try {
-            conexao = BD.getConexao();
-            comando = conexao.createStatement();
-
-            stringSQL = "delete from Exercicio where idExercicio = " + exercicio.getIdExercicio();
-            comando.execute(stringSQL);
-        } finally {
-            fecharConexao(conexao, comando);
-        }
-    }
-
-    public static List<Exercicio> obterExercicios()
-            throws ClassNotFoundException, SQLException {
-        Connection conexao = null;
-        Statement comando = null;
-        List<Exercicio> exercicios = new ArrayList<>();
-        Exercicio exercicio;
-        try {
-            conexao = BD.getConexao();
-            comando = conexao.createStatement();
-            ResultSet rs = comando.executeQuery("select * from Exercicio order by nome");
-            while (rs.next()) {
-                exercicio = instanciarExercicio(rs);
-                exercicios.add(exercicio);
+            em.getTransaction().begin();
+            if (exercicio.getIdExercicio() == null) {
+                em.persist(exercicio);
+            } else {
+                em.merge(exercicio);
             }
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+            System.err.println(e);
         } finally {
-            fecharConexao(conexao, comando);
+            em.close();
         }
-        return exercicios;
+        return exercicio;
     }
 
-    public static List<Exercicio> obterExerciciosAerobicos()
-            throws ClassNotFoundException, SQLException {
-        Connection conexao = null;
-        Statement comando = null;
-        List<Exercicio> exercicios = new ArrayList<>();
-        Exercicio exercicio;
-        try {
-            conexao = BD.getConexao();
-            comando = conexao.createStatement();
-            ResultSet rs = comando.executeQuery("select * from Exercicio where tipoTreino = 'Aerobico'");
-            while (rs.next()) {
-                exercicio = instanciarExercicio(rs);
-                exercicios.add(exercicio);
-            }
-        } finally {
-            fecharConexao(conexao, comando);
-        }
-        return exercicios;
-    }
-
-    public static List<Exercicio> obterExerciciosMusculacao()
-            throws ClassNotFoundException, SQLException {
-        Connection conexao = null;
-        Statement comando = null;
-        List<Exercicio> exercicios = new ArrayList<>();
-        Exercicio exercicio;
-        try {
-            conexao = BD.getConexao();
-            comando = conexao.createStatement();
-            ResultSet rs = comando.executeQuery("select * from Exercicio where tipoTreino = 'Musculação'");
-            while (rs.next()) {
-                exercicio = instanciarExercicio(rs);
-                exercicios.add(exercicio);
-            }
-        } finally {
-            fecharConexao(conexao, comando);
-        }
-        return exercicios;
-    }
-
-    public static Exercicio obterExercicio(int idExercicio) throws ClassNotFoundException, SQLException {
-        Connection conexao = null;
-        Statement comando = null;
+    public Exercicio excluir(Integer idExercicio) {
+        EntityManager em = new ConexaoFactory().getConexao();
         Exercicio exercicio = null;
         try {
-            conexao = BD.getConexao();
-            comando = conexao.createStatement();
-            ResultSet rs = comando.executeQuery("select * from Exercicio where idExercicio = " + idExercicio);
-            rs.first();
-            exercicio = instanciarExercicio(rs);
+            exercicio = em.find(Exercicio.class, idExercicio);
+            em.getTransaction().begin();
+            em.remove(exercicio);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+            System.err.println(e);
         } finally {
-            fecharConexao(conexao, comando);
+            em.close();
         }
         return exercicio;
     }
 
-    public static Exercicio instanciarExercicio(ResultSet rs) throws SQLException {
-        Exercicio exercicio;
+    public Exercicio obterExercicio(Integer idExercicio) {
+        EntityManager em = new ConexaoFactory().getConexao();
+        Exercicio exercicio = null;
         try {
-            exercicio = new Exercicio(rs.getInt("idExercicio"),
-                    rs.getString("nome"),
-                    rs.getString("tipoTreino")) {
-            };
-        } catch (SQLException ex) {
-            exercicio = null;
+            exercicio = em.find(Exercicio.class, idExercicio);
+        } catch (Exception e) {
+            System.err.println(e);
+        } finally {
+            em.close();
         }
         return exercicio;
+    }
+
+    public List<Exercicio> obterExercicios() {
+        EntityManager em = new ConexaoFactory().getConexao();
+        List<Exercicio> exercicios = null;
+        try {
+            exercicios = em.createQuery("from Exercicio t").getResultList();
+        } catch (Exception e) {
+            System.err.println(e);
+        } finally {
+            em.close();
+        }
+        return exercicios;
+    }
+
+    public static List<Exercicio> obterExerciciosAerobicos() {
+        EntityManager em = new ConexaoFactory().getConexao();
+        List<Exercicio> exercicios = null;
+        try {
+            exercicios = em.createQuery("SELECT e FROM Exercicio e"
+                    + " WHERE e.tipoTreino = :tipo")
+                    .setParameter("tipo", "Aerobico").getResultList();
+        } catch (Exception e) {
+            System.err.println(e);
+        } finally {
+            em.close();
+        }
+        return exercicios;
+    }
+
+    public static List<Exercicio> obterExerciciosMusculacao() {
+        EntityManager em = new ConexaoFactory().getConexao();
+        List<Exercicio> exercicios = null;
+        try {
+            exercicios = em.createQuery("SELECT e FROM Exercicio e"
+                    + " WHERE e.tipoTreino = :tipo")
+                    .setParameter("tipo", "Musculação").getResultList();
+        } catch (Exception e) {
+            System.err.println(e);
+        } finally {
+            em.close();
+        }
+        return exercicios;
     }
 }

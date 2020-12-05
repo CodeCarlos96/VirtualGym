@@ -1,11 +1,5 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package controller;
 
-import exception.TraduzirExcecao;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.logging.Level;
@@ -16,15 +10,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import model.Aula;
-import model.Horario;
 import model.Professor;
 import model.Sala;
 import model.Turma;
 
-/**
- *
- * @author Dudu
- */
 public class ManterTurmaController extends HttpServlet {
 
     /**
@@ -59,7 +48,7 @@ public class ManterTurmaController extends HttpServlet {
             request.setAttribute("professores", Professor.obterProfessores());
 
             if (!operacao.equals("Incluir")) {
-                int idTurma = Integer.parseInt(request.getParameter("idTurma"));
+                Integer idTurma = Integer.parseInt(request.getParameter("idTurma"));
                 Turma turma = Turma.obterTurma(idTurma);
                 request.setAttribute("turma", turma);
             }
@@ -123,59 +112,19 @@ public class ManterTurmaController extends HttpServlet {
     private void confirmarOperacao(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, ClassNotFoundException, SQLException {
         String operacao = request.getParameter("operacao");
 
-        int idTurma = Integer.parseInt(request.getParameter("txtIdTurma"));
-        int idSala = operacao.equals("Excluir") ? 0 : Integer.parseInt(request.getParameter("optSala"));
-        int idAula = operacao.equals("Excluir") ? 0 : Integer.parseInt(request.getParameter("optAula"));
-        int idProfessor = operacao.equals("Excluir") ? 0 : Integer.parseInt(request.getParameter("optProfessor"));
+        Integer idTurma = operacao.equals("Incluir") ? null : Integer.parseInt(request.getParameter("idTurma"));
+        Integer idSala = operacao.equals("Excluir") ? null : Integer.parseInt(request.getParameter("optSala"));
+        Integer idAula = operacao.equals("Excluir") ? null : Integer.parseInt(request.getParameter("optAula"));
+        Integer idProfessor = operacao.equals("Excluir") ? null : Integer.parseInt(request.getParameter("optProfessor"));
 
         try {
-            Sala sala = null;
-            Aula aula = null;
-            Professor professor = null;
-            if (idSala != 0) {
-                sala = Sala.obterSala(idSala);
-            }
-            if (idAula != 0) {
-                aula = Aula.obterAula(idAula);
-            }
-            if (idProfessor != 0) {
-                professor = Professor.obterProfessor(idProfessor);
-            }
+            Turma turma = new Turma(idTurma, Professor.obterProfessor(idProfessor), Sala.obterSala(idSala), Aula.obterAula(idAula));
 
-            Turma turma = new Turma(idTurma, professor, sala, aula);
-            if (operacao.equals("Incluir")) {
-                turma.gravar();
-            }
-            if (operacao.equals("Editar")) {
-                turma.editar();
-            }
-            if (operacao.equals("Excluir")) {
-//                Horario.excluirHorarioTurma(idTurma);
-                turma.excluir();
-            }
+            turma = operacao.equals("Excluir") ? turma.excluir() : turma.gravar();
+
             RequestDispatcher view = request.getRequestDispatcher("PesquisaTurmaController");
             view.forward(request, response);
-        } catch (com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException ex) {
-            Turma turma;
-            if (!operacao.equals("Excluir")) {
-                Sala sala = Sala.obterSala(idSala);
-                Aula aula = Aula.obterAula(idAula);
-                Professor professor = Professor.obterProfessor(idProfessor);
-                turma = new Turma(idTurma, professor, sala, aula);
-            } else {
-                turma = Turma.obterTurma(idTurma);
-            }
-            request.setAttribute("operacao", operacao);
-            request.setAttribute("salas", Sala.obterSalas());
-            request.setAttribute("aulas", Aula.obterAulas());
-            request.setAttribute("professores", Professor.obterProfessores());
-            request.setAttribute("turma", turma);
-            request.setAttribute("erro", "Erro: " + TraduzirExcecao.ex(ex.getMessage()));
-
-            RequestDispatcher view = request.getRequestDispatcher("/cadastrarTurma.jsp");
-            view.forward(request, response);
-
-        } catch (ServletException | IOException | SQLException | ClassNotFoundException ex) {
+        } catch (ServletException | IOException ex) {
             Logger.getLogger(ManterTurmaController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

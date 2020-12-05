@@ -5,7 +5,6 @@
  */
 package controller;
 
-import exception.TraduzirExcecao;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.logging.Level;
@@ -50,12 +49,12 @@ public class ManterHorarioController extends HttpServlet {
     public void prepararOperacao(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
         try {
             String operacao = request.getParameter("operacao");
-            int idTurma = Integer.parseInt(request.getParameter("idTurma"));
+            Integer idTurma = Integer.parseInt(request.getParameter("idTurma"));
             request.setAttribute("operacao", operacao);
             request.setAttribute("turma", Turma.obterTurma(idTurma));
 
             if (!operacao.equals("Incluir")) {
-                int idHorario = Integer.parseInt(request.getParameter("idHorario"));
+                Integer idHorario = Integer.parseInt(request.getParameter("idHorario"));
                 Horario horario = Horario.obterHorario(idHorario);
                 request.setAttribute("horario", horario);
             }
@@ -66,8 +65,6 @@ public class ManterHorarioController extends HttpServlet {
             throw e;
         } catch (IOException e) {
             throw new ServletException(e);
-        } catch (ClassNotFoundException | SQLException ex) {
-            Logger.getLogger(ManterHorarioController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -120,8 +117,9 @@ public class ManterHorarioController extends HttpServlet {
 
     private void confirmarOperacao(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, ClassNotFoundException, SQLException {
         String operacao = request.getParameter("operacao");
-        int idTurma = Integer.parseInt(request.getParameter("idTurma"));
-        int idHorario = operacao.equals("Incluir") ? 0 : Integer.parseInt(request.getParameter("idHorario"));
+        
+        Integer idHorario = operacao.equals("Incluir") ? null : Integer.parseInt(request.getParameter("idHorario"));
+        Integer idTurma = Integer.parseInt(request.getParameter("idTurma"));
 
         String dia = operacao.equals("Excluir") ? "" : request.getParameter("optDia");
         String horaInicio = request.getParameter("txtHoraInicio");
@@ -129,39 +127,17 @@ public class ManterHorarioController extends HttpServlet {
 
         try {
             Turma turma = Turma.obterTurma(idTurma);
-            Horario horario = new Horario(dia, horaInicio, horaFim, turma);
+            Horario horario = new Horario(idHorario, dia, horaInicio, horaFim, turma);
 
-            if (operacao.equals("Incluir")) {
-                horario.gravar();
+            if (operacao.equals("Excluir")) {
+                horario.excluir();
             } else {
-                horario.setIdHorario(idHorario);
-                if (operacao.equals("Editar")) {
-                    horario.editar();
-                }
-                if (operacao.equals("Excluir")) {
-                    horario.excluir();
-                }
+                horario.gravar();
             }
+
             RequestDispatcher view = request.getRequestDispatcher("PesquisaHorarioController");
             view.forward(request, response);
-        } catch (com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException ex) {
-            Horario horario;
-            if (!operacao.equals("Excluir")) {
-                Turma turma = Turma.obterTurma(idTurma);
-                horario = new Horario(dia, horaInicio, horaFim, turma);
-            } else {
-                horario = Horario.obterHorario(idHorario);
-            }
-
-            request.setAttribute("operacao", operacao);
-            request.setAttribute("turma", Turma.obterTurma(idTurma));
-            request.setAttribute("horario", horario);
-            request.setAttribute("erro", "Erro: " + TraduzirExcecao.ex(ex.getMessage()));
-
-            RequestDispatcher view = request.getRequestDispatcher("/cadastrarHorario.jsp");
-            view.forward(request, response);
-
-        } catch (ServletException | IOException | SQLException | ClassNotFoundException ex) {
+        } catch (ServletException | IOException ex) {
             Logger.getLogger(ManterHorarioController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

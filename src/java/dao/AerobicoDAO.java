@@ -1,211 +1,149 @@
 package dao;
 
-import static dao.DAO.fecharConexao;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Types;
-import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.EntityManager;
 import model.Aerobico;
+import model.FichaTreino;
 
 public class AerobicoDAO {
 
-    public static void gravar(Aerobico aerobico) throws SQLException, ClassNotFoundException {
-        Connection conexao = null;
-        PreparedStatement comando = null;
+    private static AerobicoDAO instancia = new AerobicoDAO();
 
-        try {
-            conexao = BD.getConexao();
-
-            if (aerobico.getOrdem() <= Aerobico.obterOrdem(aerobico.getFichaTreino().getIdFichaTreino())) {
-                comando = conexao.prepareStatement(
-                        "update Aerobico set ordem=(ordem+1) where FichaTreino_idFichaTreino="
-                        + aerobico.getFichaTreino().getIdFichaTreino()
-                        + " and ordem >= " + aerobico.getOrdem()
-                );
-                comando.executeUpdate();
-            }
-
-            comando = conexao.prepareStatement(
-                    "insert into Aerobico values (default, ?, ?, ?, ?, ?)"
-            );
-
-            comando.setInt(1, aerobico.getOrdem());
-            comando.setInt(2, aerobico.getTempo());
-            comando.setInt(3, aerobico.getDistancia());
-
-            if (aerobico.getFichaTreino() == null) {
-                comando.setNull(4, Types.INTEGER);
-            } else {
-                comando.setInt(4, aerobico.getFichaTreino().getIdFichaTreino());
-            }
-            if (aerobico.getExercicio() == null) {
-                comando.setNull(5, Types.INTEGER);
-            } else {
-                comando.setInt(5, aerobico.getExercicio().getIdExercicio());
-            }
-
-            comando.executeUpdate();
-
-            ResultSet rs = comando.executeQuery("select LAST_INSERT_ID()");
-            rs.first();
-            aerobico.setIdAerobico(rs.getInt(1));
-        } finally {
-            fecharConexao(conexao, comando);
-        }
+    private AerobicoDAO() {
     }
 
-    public static void editar(Aerobico aerobico) throws SQLException, ClassNotFoundException {
-        Connection conexao = null;
-        PreparedStatement comando = null;
-        Statement comandoOrdem;
-
-        try {
-            conexao = BD.getConexao();
-            comandoOrdem = conexao.createStatement();
-
-            ResultSet rs = comandoOrdem.executeQuery("select ordem from Aerobico where idAerobico = " + aerobico.getIdAerobico());
-            rs.first();
-            int antigaOrdem = rs.getInt(1);
-
-            if (aerobico.getOrdem() > antigaOrdem) {
-                comando = conexao.prepareStatement(
-                        "update Aerobico set ordem=(ordem-1) where FichaTreino_idFichaTreino="
-                        + aerobico.getFichaTreino().getIdFichaTreino()
-                        + " and ordem between " + antigaOrdem + " and " + aerobico.getOrdem()
-                );
-                comando.executeUpdate();
-            }
-            if (aerobico.getOrdem() < antigaOrdem) {
-                comando = conexao.prepareStatement(
-                        "update Aerobico set ordem=(ordem+1) where FichaTreino_idFichaTreino="
-                        + aerobico.getFichaTreino().getIdFichaTreino()
-                        + " and ordem between " + aerobico.getOrdem() + " and " + antigaOrdem
-                );
-                comando.executeUpdate();
-            }
-
-            comando = conexao.prepareStatement(
-                    "update Aerobico set ordem=?, tempo=?, distancia=?, FichaTreino_idFichaTreino=?, Exercicio_idExercicio=? where idAerobico=?"
-            );
-            comando.setInt(1, aerobico.getOrdem());
-            comando.setInt(2, aerobico.getTempo());
-            comando.setInt(3, aerobico.getDistancia());
-
-            if (aerobico.getFichaTreino() == null) {
-                comando.setNull(4, Types.INTEGER);
-            } else {
-                comando.setInt(4, aerobico.getFichaTreino().getIdFichaTreino());
-            }
-            if (aerobico.getExercicio() == null) {
-                comando.setNull(5, Types.INTEGER);
-            } else {
-                comando.setInt(5, aerobico.getExercicio().getIdExercicio());
-            }
-            comando.setInt(6, aerobico.getIdAerobico());
-
-            comando.executeUpdate();
-
-        } finally {
-            fecharConexao(conexao, comando);
-        }
+    public static AerobicoDAO getInstancia() {
+        return instancia;
     }
 
-    public static void excluir(Aerobico aerobico) throws SQLException, ClassNotFoundException {
-        Connection conexao = null;
-        Statement comando = null;
-        String stringSQL;
+    public Aerobico gravar(Aerobico aerobico) {
+        EntityManager em = new ConexaoFactory().getConexao();
         try {
-            conexao = BD.getConexao();
-            comando = conexao.createStatement();
-
-            stringSQL = "update aerobico set ordem=(ordem-1) where FichaTreino_idFichaTreino="
-                    + aerobico.getFichaTreino().getIdFichaTreino()
-                    + " and ordem > " + aerobico.getOrdem();
-            comando.execute(stringSQL);
-
-            stringSQL = "delete from aerobico where idAerobico = " + aerobico.getIdAerobico();
-            comando.execute(stringSQL);
-        } finally {
-            fecharConexao(conexao, comando);
-        }
-    }
-
-    public static int obterOrdem(int idFichaTreino) throws SQLException, ClassNotFoundException {
-        Connection conexao = null;
-        Statement comando = null;
-        int ordem;
-        try {
-            conexao = BD.getConexao();
-            comando = conexao.createStatement();
-            ResultSet rs = comando.executeQuery("select count(aerobico.idAerobico) from Aerobico where FichaTreino_idFichaTreino = " + idFichaTreino);
-
-            rs.first();
-            ordem = rs.getInt(1);
-        } finally {
-            fecharConexao(conexao, comando);
-        }
-        return ordem;
-    }
-
-    public static List<Aerobico> obterAerobicos(int idFichaTreino)
-            throws ClassNotFoundException, SQLException {
-        Connection conexao = null;
-        Statement comando = null;
-        List<Aerobico> aerobicos = new ArrayList<>();
-        Aerobico aerobico;
-        try {
-            conexao = BD.getConexao();
-            comando = conexao.createStatement();
-            ResultSet rs;
-            if (idFichaTreino != 0) {
-                rs = comando.executeQuery("select * from Aerobico where FichaTreino_idFichaTreino = " + idFichaTreino + " order by ordem");
+            em.getTransaction().begin();
+            if (aerobico.getIdAerobico() == null) {
+                atualizarOrdem(aerobico, em, true);
+                em.persist(aerobico);
             } else {
-                rs = comando.executeQuery("select * from Aerobico");
+                atualizarOrdem(aerobico, em, false);
+                em.merge(aerobico);
             }
-            while (rs.next()) {
-                aerobico = instanciarAerobico(rs);
-                aerobicos.add(aerobico);
-            }
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+            System.err.println(e);
         } finally {
-            fecharConexao(conexao, comando);
+            em.close();
+        }
+        return aerobico;
+    }
+
+    public Aerobico excluir(Integer idAerobico) {
+        EntityManager em = new ConexaoFactory().getConexao();
+        Aerobico aerobico = null;
+        try {
+            aerobico = em.find(Aerobico.class, idAerobico);
+            em.getTransaction().begin();
+            em.remove(aerobico);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+            System.err.println(e);
+        } finally {
+            em.close();
+        }
+        return aerobico;
+    }
+
+    public void excluirExerciciosFicha(FichaTreino fichaTreino, EntityManager em) throws Exception {
+        em.createQuery(
+                "DELETE FROM Aerobico a WHERE a.fichaTreino = :fichaTreino")
+                .setParameter("fichaTreino", fichaTreino)
+                .executeUpdate();
+    }
+
+    public Aerobico obterAerobico(Integer idAerobico) {
+        EntityManager em = new ConexaoFactory().getConexao();
+        Aerobico aerobico = null;
+        try {
+            aerobico = em.find(Aerobico.class, idAerobico);
+        } catch (Exception e) {
+            System.err.println(e);
+        } finally {
+            em.close();
+        }
+        return aerobico;
+    }
+
+    public List<Aerobico> obterAerobicos(Integer idFichaTreino) {
+        EntityManager em = new ConexaoFactory().getConexao();
+        List<Aerobico> aerobicos = null;
+        try {
+            aerobicos = em.createQuery("SELECT a FROM Aerobico a"
+                    + " WHERE a.fichaTreino = :fichaTreino"
+                    + " ORDER BY a.ordem")
+                    .setParameter("fichaTreino", FichaTreino.obterFichaTreino(idFichaTreino))
+                    .getResultList();
+        } catch (Exception e) {
+            System.err.println(e);
+        } finally {
+            em.close();
         }
         return aerobicos;
     }
 
-    public static Aerobico obterAerobico(int idAerobico) throws ClassNotFoundException, SQLException {
-        Connection conexao = null;
-        Statement comando = null;
-        Aerobico aerobico = null;
+    public int obterOrdem(Integer idFichaTreino) {
+        EntityManager em = new ConexaoFactory().getConexao();
+        long ordem = 0;
         try {
-            conexao = BD.getConexao();
-            comando = conexao.createStatement();
-            ResultSet rs = comando.executeQuery("select * from Aerobico where idAerobico = " + idAerobico);
-            rs.first();
-            aerobico = instanciarAerobico(rs);
+            ordem = (long) em.createQuery("SELECT COUNT(a) FROM Aerobico a"
+                    + " WHERE a.fichaTreino = :fichaTreino")
+                    .setParameter("fichaTreino", FichaTreino.obterFichaTreino(idFichaTreino))
+                    .getSingleResult();
+        } catch (Exception e) {
+            System.err.println(e);
         } finally {
-            fecharConexao(conexao, comando);
+            em.close();
         }
-        return aerobico;
+        return Math.toIntExact(ordem);
     }
+    
+    public void atualizarOrdem(Aerobico aerobico, EntityManager em, boolean gravar) throws Exception {
+        if (gravar) {
+            if (aerobico.getOrdem() <= Aerobico.obterOrdem(aerobico.getFichaTreino().getIdFichaTreino())) {
+                em.createQuery(
+                        "UPDATE Aerobico a SET a.ordem = (a.ordem + 1) WHERE a.fichaTreino = :fichaTreino AND a.ordem >= :ordem")
+                        .setParameter("fichaTreino", aerobico.getFichaTreino())
+                        .setParameter("ordem", aerobico.getOrdem())
+                        .executeUpdate();
+            }
+        } else {
+            int antigaOrdem = (int) em.createQuery("SELECT a.ordem FROM Aerobico a"
+                    + " WHERE a.idAerobico = :idAerobico")
+                    .setParameter("idAerobico", aerobico.getIdAerobico())
+                    .getSingleResult();
 
-    public static Aerobico instanciarAerobico(ResultSet rs) throws SQLException {
-        Aerobico aerobico;
-        try {
-            aerobico = new Aerobico(rs.getInt("ordem"),
-                    rs.getInt("tempo"),
-                    rs.getInt("distancia"),
-                    null, null) {
-            };
-            aerobico.setIdAerobico(rs.getInt("idAerobico"));
-            aerobico.setIdExercicio(rs.getInt("Exercicio_idExercicio"));
-            aerobico.setIdFichaTreino(rs.getInt("FichaTreino_idFichaTreino"));
-        } catch (SQLException ex) {
-            aerobico = null;
+            if (aerobico.getOrdem() > antigaOrdem) {
+                em.createQuery(
+                        "UPDATE Aerobico a SET a.ordem = (a.ordem - 1)"
+                        + " WHERE a.fichaTreino = :fichaTreino"
+                        + " AND a.ordem BETWEEN :antigaOrdem"
+                        + " AND :ordem")
+                        .setParameter("fichaTreino", aerobico.getFichaTreino())
+                        .setParameter("antigaOrdem", antigaOrdem)
+                        .setParameter("ordem", aerobico.getOrdem())
+                        .executeUpdate();
+            }
+            if (aerobico.getOrdem() < antigaOrdem) {
+                em.createQuery(
+                        "UPDATE Aerobico a SET a.ordem = (a.ordem + 1)"
+                        + " WHERE a.fichaTreino = :fichaTreino"
+                        + " AND a.ordem BETWEEN :ordem"
+                        + " AND :antigaOrdem")
+                        .setParameter("fichaTreino", aerobico.getFichaTreino())
+                        .setParameter("ordem", aerobico.getOrdem())
+                        .setParameter("antigaOrdem", antigaOrdem)
+                        .executeUpdate();
+            }
         }
-        return aerobico;
     }
 }

@@ -5,13 +5,12 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <script src="scripts/aerobico.js" charset="utf-8"></script>
-        <title>Virtual Gym</title>
+        <title>Virtual Gym - Cadastrar Aerobico</title>
     </head>
     <body>
         <a href="index.jsp"><button>Menu</button></a>
         <a href="PesquisaExercicioFichaController?idFichaTreino=${fichaTreino.idFichaTreino}"><button>Voltar</button></a>
-        <h1>${operacao} Exercicios Aerobicos (${fichaTreino.aluno.nome} / ${fichaTreino.dataInicio})</h1>
+        <h1>${operacao} Exercicios Aerobicos (${fichaTreino.aluno.usuario.nome} / ${fichaTreino.dataInicio})</h1>
         <form action="ManterAerobicoController?acao=confirmarOperacao&operacao=${operacao}&idFichaTreino=${fichaTreino.idFichaTreino}&idAerobico=${aerobico.idAerobico}" method="post" name="formManterAerobico" onsubmit="return validarFormulario(this)">
             <span id="erro" style="color: red">${erro}</span>
             <table>
@@ -44,9 +43,10 @@
                     </tr>
                     <tr>
                         <td>Distância (km): </td> <td><input type="number" name="txtDistancia" min="0" value="${aerobico.distancia}" <c:if test="${operacao == 'Excluir'}"> readonly </c:if>></td>
-                    </tr>
-                </table>
-                <input type="submit" name="btnConfirmar" value="Confirmar">
+                </tr>
+            </table>
+            <input type="submit" name="btnConfirmar" value="Confirmar">
         </form>
+        <script src="scripts/aerobico.js" charset="utf-8"></script>
     </body>
 </html>

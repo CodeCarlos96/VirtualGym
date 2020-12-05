@@ -1,146 +1,107 @@
 package dao;
 
-import static dao.DAO.fecharConexao;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.EntityManager;
 import model.Aluno;
-import model.Usuario;
+import model.AvaliacaoFisica;
+import model.FichaTreino;
+import model.MatriculaAcademia;
 
 public class AlunoDAO {
 
-    public static void gravar(Aluno aluno) throws SQLException, ClassNotFoundException {
-        Connection conexao = null;
-        PreparedStatement comando = null;
+    private static AlunoDAO instancia = new AlunoDAO();
 
-        try {
-            conexao = BD.getConexao();
-
-            Usuario usuario = new Usuario(aluno.getIdAluno(), aluno.getEmail(), aluno.getSenha(), aluno.getNome(), aluno.getCpf(),
-                    aluno.getRg(), aluno.getSexo(), aluno.getDataNascimento(), aluno.getStatus(), aluno.getTelefone(), aluno.getEndereco()) {
-            };
-            usuario.gravar();
-
-            comando = conexao.prepareStatement(
-                    "insert into Aluno (idAluno, responsavel, Usuario_idUsuario) values (?, ?, ?)"
-            );
-            comando.setInt(1, aluno.getIdAluno());
-            comando.setString(2, aluno.getResponsavel());
-            comando.setInt(3, usuario.getIdUsuario());
-
-            comando.executeUpdate();
-        } finally {
-            fecharConexao(conexao, comando);
-        }
-
+    private AlunoDAO() {
     }
 
-    public static void editar(Aluno aluno) throws SQLException, ClassNotFoundException {
-        Connection conexao = null;
-        PreparedStatement comando = null;
-
-        try {
-            conexao = BD.getConexao();
-
-            Usuario usuario = new Usuario(aluno.getIdAluno(), aluno.getEmail(), aluno.getSenha(), aluno.getNome(), aluno.getCpf(),
-                    aluno.getRg(), aluno.getSexo(), aluno.getDataNascimento(), aluno.getStatus(), aluno.getTelefone(), aluno.getEndereco()) {
-            };
-            usuario.editar();
-
-            comando = conexao.prepareStatement(
-                    "update Aluno set responsavel=?, Usuario_idUsuario=? where idAluno=?"
-            );
-            comando.setString(1, aluno.getResponsavel());
-            comando.setInt(2, usuario.getIdUsuario());
-            comando.setInt(3, aluno.getIdAluno());
-
-            comando.executeUpdate();
-        } finally {
-            fecharConexao(conexao, comando);
-        }
-
+    public static AlunoDAO getInstancia() {
+        return instancia;
     }
 
-    public static void excluir(Aluno aluno) throws SQLException, ClassNotFoundException {
-        Connection conexao = null;
-        Statement comando = null;
-        String stringSQL;
+    public Aluno gravar(Aluno aluno) {
+        EntityManager em = new ConexaoFactory().getConexao();
         try {
-            conexao = BD.getConexao();
-            comando = conexao.createStatement();
-            stringSQL = "delete from aluno where idAluno = " + aluno.getIdAluno();
-            comando.execute(stringSQL);
-
-            stringSQL = "delete from usuario where idUsuario = " + aluno.getIdUsuario();
-            comando.execute(stringSQL);
-
+            em.getTransaction().begin();
+            if (aluno.getIdAluno() == null) {
+                em.persist(aluno.getUsuario().getEndereco());
+                em.persist(aluno.getUsuario());
+                em.persist(aluno);
+            } else {
+                em.merge(aluno.getUsuario().getEndereco());
+                em.merge(aluno.getUsuario());
+                em.merge(aluno);
+            }
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+            System.err.println(e);
         } finally {
-            fecharConexao(conexao, comando);
+            em.close();
         }
+        return aluno;
     }
 
-    public static List<Aluno> obterAlunos()
-            throws ClassNotFoundException, SQLException {
-        Connection conexao = null;
-        Statement comando = null;
-        List<Aluno> alunos = new ArrayList<Aluno>();
+    public Aluno excluir(Integer idAluno) {
+        EntityManager em = new ConexaoFactory().getConexao();
         Aluno aluno = null;
         try {
-            conexao = BD.getConexao();
-            comando = conexao.createStatement();
-            ResultSet rs = comando.executeQuery("select * from aluno join usuario on aluno.Usuario_idUsuario = usuario.idUsuario order by nome");
-            while (rs.next()) {
-                aluno = instanciarAluno(rs);
-                alunos.add(aluno);
-            }
+            aluno = em.find(Aluno.class, idAluno);
+            em.getTransaction().begin();
+            AvaliacaoFisica.excluirAvaliacaoAluno(aluno, em);
+            FichaTreino.excluirFichaAluno(aluno, em);
+            MatriculaAcademia.excluirMatriculaAluno(aluno, em);
+            em.remove(aluno);
+            em.remove(aluno.getUsuario());
+            em.remove(aluno.getUsuario().getEndereco());
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+            System.err.println(e);
         } finally {
-            fecharConexao(conexao, comando);
+            em.close();
+        }
+        return aluno;
+    }
+
+    public Aluno obterAluno(Integer idAluno) {
+        EntityManager em = new ConexaoFactory().getConexao();
+        Aluno aluno = null;
+        try {
+            aluno = em.find(Aluno.class, idAluno);
+        } catch (Exception e) {
+            System.err.println(e);
+        } finally {
+            em.close();
+        }
+        return aluno;
+    }
+
+    public List<Aluno> obterAlunos() {
+        EntityManager em = new ConexaoFactory().getConexao();
+        List<Aluno> alunos = null;
+        try {
+            alunos = em.createQuery("from Aluno a").getResultList();
+        } catch (Exception e) {
+            System.err.println(e);
+        } finally {
+            em.close();
         }
         return alunos;
     }
 
-    public static Aluno obterAluno(int idAluno) throws ClassNotFoundException, SQLException {
-        Connection conexao = null;
-        Statement comando = null;
-        Aluno aluno = null;
+    public List<Aluno> obterAlunosNome(String nomeAluno) {
+        EntityManager em = new ConexaoFactory().getConexao();
+        List<Aluno> alunos = null;
         try {
-            conexao = BD.getConexao();
-            comando = conexao.createStatement();
-            ResultSet rs = comando.executeQuery("select * from aluno join usuario on aluno.Usuario_idUsuario = usuario.idUsuario"
-                    + " where idAluno = " + idAluno);
-            rs.first();
-            aluno = instanciarAluno(rs);
+            alunos = em.createQuery("SELECT a FROM Aluno a"
+                    + " WHERE a.usuario.nome LIKE '%" + nomeAluno + "%'")
+                    .getResultList();
+        } catch (Exception e) {
+            System.err.println(e);
         } finally {
-            fecharConexao(conexao, comando);
+            em.close();
         }
-        return aluno;
-    }
-
-    public static Aluno instanciarAluno(ResultSet rs) throws SQLException {
-        Aluno aluno;
-        try {
-            aluno = new Aluno(rs.getInt("idAluno"),
-                    rs.getString("responsavel"),
-                    rs.getInt("Usuario_idUsuario"),
-                    rs.getString("email"),
-                    rs.getString("senha"),
-                    rs.getString("nome"),
-                    rs.getString("cpf"),
-                    rs.getString("rg"),
-                    rs.getString("sexo"),
-                    rs.getDate("dataNascimento"),
-                    rs.getString("status"),
-                    rs.getString("telefone"), null) {
-            };
-            aluno.setIdEndereco(rs.getInt("Endereco_idEndereco"));
-        } catch (SQLException ex) {
-            aluno = null;
-        }
-        return aluno;
+        return alunos;
     }
 
 }

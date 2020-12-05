@@ -5,21 +5,17 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <script src="scripts/plano.js" charset="utf-8"></script>
-        <title>Virtual Gym</title>
+        <title>Virtual Gym - Cadastrar Plano</title>
     </head>
     <body>
         <a href="index.jsp"><button>Menu</button></a>
         <a href="PesquisaPlanoController"><button>Voltar</button></a>
         <h1>${operacao} Plano</h1>
-        <form action="ManterPlanoController?acao=confirmarOperacao&operacao=${operacao}" method="post" name="formManterPlano" onsubmit="return validarFormulario(this)">
+        <form action="ManterPlanoController?acao=confirmarOperacao&operacao=${operacao}&idPlano=${plano.idPlano}" method="post" name="formManterPlano" onsubmit="return validarFormulario(this)">
             <span id="erro" style="color: red">${erro}</span>
             <table>
                 <tr>
-                    <td>Código: </td> <td><input type="number" name="txtIdPlano" min="1" value="${plano.idPlano}" <c:if test="${operacao != 'Incluir'}"> readonly </c:if>></td>
-                    </tr>
-                    <tr>
-                        <td>Nome: </td> <td><input type="text" name="txtNome" maxlength="40" value="${plano.nome}" <c:if test="${operacao == 'Excluir'}"> readonly </c:if>></td>
+                    <td>Nome: </td> <td><input type="text" name="txtNome" maxlength="40" value="${plano.nome}" <c:if test="${operacao == 'Excluir'}"> readonly </c:if>></td>
                     </tr>
                     <tr>
                         <td>Tipo: </td>
@@ -49,5 +45,6 @@
             </table>
             <input type="submit" name="btnConfirmar" value="Confirmar">
         </form>
+        <script src="scripts/plano.js" charset="utf-8"></script>
     </body>
 </html>

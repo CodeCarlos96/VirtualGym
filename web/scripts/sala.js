@@ -2,9 +2,6 @@
 function validarFormulario(form) {
     var mensagem;
     mensagem = "";
-    if (form.txtIdSala.value == "") {
-        mensagem = mensagem + "Informe o Código da Sala\n";
-    }
     if (form.txtNome.value == "") {
         mensagem = mensagem + "Informe o Nome da Sala\n";
     }

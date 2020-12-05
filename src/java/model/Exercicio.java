@@ -1,26 +1,38 @@
 package model;
 
 import dao.ExercicioDAO;
-import java.sql.SQLException;
+import java.io.Serializable;
 import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
-public class Exercicio {
+@Entity
+@Table(name = "Exercicio")
+public class Exercicio implements Serializable {
 
-    private int idExercicio;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer idExercicio;
     private String nome;
     private String tipoTreino;
 
-    public Exercicio(int idExercicio, String nome, String tipoTreino) {
+    public Exercicio() {
+    }
+
+    public Exercicio(Integer idExercicio, String nome, String tipoTreino) {
         this.idExercicio = idExercicio;
         this.nome = nome;
         this.tipoTreino = tipoTreino;
     }
 
-    public int getIdExercicio() {
+    public Integer getIdExercicio() {
         return idExercicio;
     }
 
-    public void setIdExercicio(int idExercicio) {
+    public void setIdExercicio(Integer idExercicio) {
         this.idExercicio = idExercicio;
     }
 
@@ -40,31 +52,27 @@ public class Exercicio {
         this.tipoTreino = tipoTreino;
     }
 
-    public static Exercicio obterExercicio(int idExercicio) throws ClassNotFoundException, SQLException {
-        return ExercicioDAO.obterExercicio(idExercicio);
+    public static Exercicio obterExercicio(Integer idExercicio) {
+        return ExercicioDAO.getInstancia().obterExercicio(idExercicio);
     }
 
-    public static List<Exercicio> obterExercicios() throws ClassNotFoundException, SQLException {
-        return ExercicioDAO.obterExercicios();
+    public static List<Exercicio> obterExercicios() {
+        return ExercicioDAO.getInstancia().obterExercicios();
     }
-    
-    public static List<Exercicio> obterExerciciosAerobicos() throws ClassNotFoundException, SQLException {
+
+    public static List<Exercicio> obterExerciciosAerobicos() {
         return ExercicioDAO.obterExerciciosAerobicos();
     }
-    
-    public static List<Exercicio> obterExerciciosMusculacao() throws ClassNotFoundException, SQLException {
+
+    public static List<Exercicio> obterExerciciosMusculacao() {
         return ExercicioDAO.obterExerciciosMusculacao();
     }
 
-    public void gravar() throws SQLException, ClassNotFoundException {
-        ExercicioDAO.gravar(this);
+    public Exercicio gravar() {
+        return ExercicioDAO.getInstancia().gravar(this);
     }
 
-    public void editar() throws SQLException, ClassNotFoundException {
-        ExercicioDAO.editar(this);
-    }
-
-    public void excluir() throws SQLException, ClassNotFoundException {
-        ExercicioDAO.excluir(this);
+    public Exercicio excluir() {
+        return ExercicioDAO.getInstancia().excluir(this.idExercicio);
     }
 }

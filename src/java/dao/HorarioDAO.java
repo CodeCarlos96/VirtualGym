@@ -1,155 +1,94 @@
 package dao;
 
-import static dao.DAO.fecharConexao;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Types;
-import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.EntityManager;
 import model.Horario;
+import model.Turma;
 
 public class HorarioDAO {
 
-    public static void gravar(Horario horario) throws SQLException, ClassNotFoundException {
-        Connection conexao = null;
-        PreparedStatement comando = null;
+    private static HorarioDAO instancia = new HorarioDAO();
 
+    private HorarioDAO() {
+    }
+
+    public static HorarioDAO getInstancia() {
+        return instancia;
+    }
+
+    public Horario gravar(Horario horario) {
+        EntityManager em = new ConexaoFactory().getConexao();
         try {
-            conexao = BD.getConexao();
-            comando = conexao.prepareStatement(
-                    "insert into Horario (idHorario, dia, horaInicio, horaFim, Turma_idTurma) values (default, ?, ?, ?, ?)"
-            );
-
-            comando.setString(1, horario.getDia());
-            comando.setString(2, horario.getHoraInicio());
-            comando.setString(3, horario.getHoraFim());
-
-            if (horario.getTurma() == null) {
-                comando.setNull(4, Types.INTEGER);
+            em.getTransaction().begin();
+            if (horario.getIdHorario() == null) {
+                em.persist(horario);
             } else {
-                comando.setInt(4, horario.getTurma().getIdTurma());
+                em.merge(horario);
             }
-
-            comando.executeUpdate();
-
-            ResultSet rs = comando.executeQuery("select LAST_INSERT_ID()");
-            rs.first();
-            horario.setIdHorario(rs.getInt(1));
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+            System.err.println(e);
         } finally {
-            fecharConexao(conexao, comando);
-        }
-    }
-
-    public static void editar(Horario horario) throws SQLException, ClassNotFoundException {
-        Connection conexao = null;
-        PreparedStatement comando = null;
-
-        try {
-            conexao = BD.getConexao();
-            comando = conexao.prepareStatement(
-                    "update Horario set dia=?, horaInicio=?, horaFim=?, Turma_idTurma=? where idHorario=?"
-            );
-            comando.setString(1, horario.getDia());
-            comando.setString(2, horario.getHoraInicio());
-            comando.setString(3, horario.getHoraFim());
-
-            if (horario.getTurma() == null) {
-                comando.setNull(4, Types.INTEGER);
-            } else {
-                comando.setInt(4, horario.getTurma().getIdTurma());
-            }
-            comando.setInt(5, horario.getIdHorario());
-
-            comando.executeUpdate();
-        } finally {
-            fecharConexao(conexao, comando);
-        }
-    }
-
-    public static void excluir(Horario horario) throws SQLException, ClassNotFoundException {
-        Connection conexao = null;
-        Statement comando = null;
-        String stringSQL;
-        try {
-            conexao = BD.getConexao();
-            comando = conexao.createStatement();
-            stringSQL = "delete from Horario where idHorario = " + horario.getIdHorario();
-            comando.execute(stringSQL);
-        } finally {
-            fecharConexao(conexao, comando);
-        }
-    }
-
-    public static void excluirHorarioTurma(int idTurma) throws SQLException, ClassNotFoundException {
-        Connection conexao = null;
-        Statement comando = null;
-        String stringSQL;
-        try {
-            conexao = BD.getConexao();
-            comando = conexao.createStatement();
-            stringSQL = "delete from Horario where Turma_idTurma = " + idTurma;
-            comando.execute(stringSQL);
-        } finally {
-            fecharConexao(conexao, comando);
-        }
-    }
-
-    public static Horario obterHorario(int idHorario)
-            throws ClassNotFoundException, SQLException {
-        Connection conexao = null;
-        Statement comando = null;
-        Horario horario = null;
-        try {
-            conexao = BD.getConexao();
-            comando = conexao.createStatement();
-            ResultSet rs = comando.executeQuery("select * from Horario where idHorario = " + idHorario);
-            rs.first();
-
-            horario = instanciarHorario(rs);
-
-        } finally {
-            fecharConexao(conexao, comando);
+            em.close();
         }
         return horario;
     }
 
-    public static List<Horario> obterHorarios(int idTurma)
-            throws ClassNotFoundException, SQLException {
-        Connection conexao = null;
-        Statement comando = null;
-        List<Horario> horarios = new ArrayList<Horario>();
+    public Horario excluir(Integer idHorario) {
+        EntityManager em = new ConexaoFactory().getConexao();
         Horario horario = null;
         try {
-            conexao = BD.getConexao();
-            comando = conexao.createStatement();
-            ResultSet rs;
-            if (idTurma == 0) {
-                rs = comando.executeQuery("select * from Horario order by dia, horaInicio, horaFim");
-            } else {
-                rs = comando.executeQuery("select * from Horario where Turma_idTurma = " + idTurma + " order by dia, horaInicio, horaFim");
-            }
-            while (rs.next()) {
-                horario = instanciarHorario(rs);
-                horarios.add(horario);
-            }
+            horario = em.find(Horario.class, idHorario);
+            em.getTransaction().begin();
+            em.remove(horario);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+            System.err.println(e);
         } finally {
-            fecharConexao(conexao, comando);
+            em.close();
+        }
+        return horario;
+    }
+
+    public Horario obterHorario(Integer idHorario) {
+        EntityManager em = new ConexaoFactory().getConexao();
+        Horario horario = null;
+        try {
+            horario = em.find(Horario.class, idHorario);
+        } catch (Exception e) {
+            System.err.println(e);
+        } finally {
+            em.close();
+        }
+        return horario;
+    }
+
+    public List<Horario> obterHorarios(Integer idTurma) {
+        EntityManager em = new ConexaoFactory().getConexao();
+        List<Horario> horarios = null;
+        try {
+            horarios = em.createQuery(
+                    "SELECT h FROM Horario h WHERE h.turma = :turma")
+                    .setParameter("turma", Turma.obterTurma(idTurma))
+                    .getResultList();
+        } catch (Exception e) {
+            System.err.println(e);
+        } finally {
+            em.close();
         }
         return horarios;
     }
 
-    public static Horario instanciarHorario(ResultSet rs) throws SQLException {
-        Horario horario;
+    public void excluirHorarioTurma(Turma turma, EntityManager em) throws Exception {
         try {
-            horario = new Horario(rs.getString("dia"), rs.getString("horaInicio"), rs.getString("horaFim"), null);
-            horario.setIdHorario(rs.getInt("idHorario"));
-            horario.setIdTurma(rs.getInt("Turma_idTurma"));
-        } catch (SQLException ex) {
-            horario = null;
+            em.createQuery(
+                    "DELETE FROM Horario h WHERE h.turma = :turma")
+                    .setParameter("turma", turma)
+                    .executeUpdate();
+        } catch (Exception e) {
+            System.err.println(e);
         }
-        return horario;
     }
 }

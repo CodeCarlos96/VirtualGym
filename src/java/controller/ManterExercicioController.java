@@ -54,7 +54,7 @@ public class ManterExercicioController extends HttpServlet {
             request.setAttribute("operacao", operacao);
 
             if (!operacao.equals("Incluir")) {
-                int idExercicio = Integer.parseInt(request.getParameter("idExercicio"));
+                Integer idExercicio = Integer.parseInt(request.getParameter("idExercicio"));
                 Exercicio exercicio = Exercicio.obterExercicio(idExercicio);
                 request.setAttribute("exercicio", exercicio);
             }
@@ -118,42 +118,22 @@ public class ManterExercicioController extends HttpServlet {
     private void confirmarOperacao(HttpServletRequest request, HttpServletResponse response) throws SQLException, ParseException, ServletException, IOException, ClassNotFoundException {
         String operacao = request.getParameter("operacao");
 
-        int idExercicio = Integer.parseInt(request.getParameter("txtIdExercicio"));
+        Integer idExercicio = operacao.equals("Incluir") ? null : Integer.parseInt(request.getParameter("idExercicio"));
         String nome = request.getParameter("txtNome");
         String tipoTreino = operacao.equals("Excluir") ? "" : request.getParameter("optTipoTreino");
 
         try {
-            Exercicio exercicio = new Exercicio(idExercicio, nome, tipoTreino) {
-            };
-            if (operacao.equals("Incluir")) {
-                exercicio.gravar();
-            }
-            if (operacao.equals("Editar")) {
-                exercicio.editar();
-            }
+            Exercicio exercicio = new Exercicio(idExercicio, nome, tipoTreino);
+
             if (operacao.equals("Excluir")) {
                 exercicio.excluir();
+            } else {
+                exercicio.gravar();
             }
 
             RequestDispatcher view = request.getRequestDispatcher("PesquisaExercicioController");
             view.forward(request, response);
-        } catch (com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException ex) {
-            Exercicio exercicio;
-            if (!operacao.equals("Excluir")) {
-                exercicio = new Exercicio(idExercicio, nome, tipoTreino) {
-                };
-            } else {
-                exercicio = Exercicio.obterExercicio(idExercicio);
-            }
-
-            request.setAttribute("operacao", operacao);
-            request.setAttribute("exercicio", exercicio);
-            request.setAttribute("erro", "Erro: " + TraduzirExcecao.ex(ex.getMessage()));
-
-            RequestDispatcher view = request.getRequestDispatcher("/cadastrarExercicio.jsp");
-            view.forward(request, response);
-
-        } catch (ServletException | IOException | SQLException | ClassNotFoundException ex) {
+        } catch (ServletException | IOException ex) {
             Logger.getLogger(ManterExercicioController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

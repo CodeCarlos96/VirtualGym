@@ -5,7 +5,6 @@
  */
 package controller;
 
-import exception.TraduzirExcecao;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.text.ParseException;
@@ -59,7 +58,7 @@ public class ManterAvaliacaoFisicaController extends HttpServlet {
             request.setAttribute("alunos", Aluno.obterAlunos());
 
             if (!operacao.equals("Incluir")) {
-                int idAvaliacaoFisica = Integer.parseInt(request.getParameter("idAvaliacaoFisica"));
+                Integer idAvaliacaoFisica = Integer.parseInt(request.getParameter("idAvaliacaoFisica"));
                 AvaliacaoFisica avaliacaoFisica = AvaliacaoFisica.obterAvaliacaoFisica(idAvaliacaoFisica);
                 request.setAttribute("avaliacaoFisica", avaliacaoFisica);
             }
@@ -123,7 +122,7 @@ public class ManterAvaliacaoFisicaController extends HttpServlet {
     private void confirmarOperacao(HttpServletRequest request, HttpServletResponse response) throws SQLException, ParseException, ServletException, IOException, ClassNotFoundException {
         String operacao = request.getParameter("operacao");
 
-        int idAvaliacaoFisica = Integer.parseInt(request.getParameter("txtIdAvaliacaoFisica"));
+        Integer idAvaliacaoFisica = operacao.equals("Incluir") ? null : Integer.parseInt(request.getParameter("idAvaliacaoFisica"));
         SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd");
         java.sql.Date dataAvaliacao = new java.sql.Date(fmt.parse(request.getParameter("txtDataAvaliacao")).getTime());
         java.sql.Date dataReavaliacao = new java.sql.Date(fmt.parse(request.getParameter("txtDataReavaliacao")).getTime());
@@ -148,60 +147,28 @@ public class ManterAvaliacaoFisicaController extends HttpServlet {
         float dobraSuprailiaca = Float.parseFloat(request.getParameter("txtDobraSuprailiaca"));
         float dobraCoxaDireita = Float.parseFloat(request.getParameter("txtDobraCoxaDireita"));
         float dobraCoxaEsquerda = Float.parseFloat(request.getParameter("txtDobraCoxaEsquerda"));
-        int idAluno = operacao.equals("Excluir") ? 0 : Integer.parseInt(request.getParameter("optAluno"));
-        int idProfessor = operacao.equals("Excluir") ? 0 : Integer.parseInt(request.getParameter("optProfessor"));
+        Integer idAluno = operacao.equals("Excluir") ? null : Integer.parseInt(request.getParameter("optAluno"));
+        Integer idProfessor = operacao.equals("Excluir") ? null : Integer.parseInt(request.getParameter("optProfessor"));
 
         try {
-            Aluno aluno = null;
-            Professor professor = null;
-            if (idAluno != 0) {
-                aluno = Aluno.obterAluno(idAluno);
-            }
-            if (idProfessor != 0) {
-                professor = Professor.obterProfessor(idProfessor);
-            }
+            Aluno aluno = Aluno.obterAluno(idAluno);
+            Professor professor = Professor.obterProfessor(idProfessor);
 
             AvaliacaoFisica avaliacaoFisica = new AvaliacaoFisica(idAvaliacaoFisica, dataAvaliacao, dataReavaliacao, peso, altura, perimetroTorax,
                     perimetroQuadril, perimetroAbdomen, perimetroCintura, perimetroAnteBracoDireito, perimetroAnteBracoEsquerdo,
                     perimetroBracoDireito, perimetroBracoEsquerdo, perimetroCoxaDireita, perimetroCoxaEsquerda, perimetroPanturrilhaDireita,
                     perimetroPanturrilhaEsquerda, dobraSubescapular, dobraTricipital, dobraPeitoral, dobraAbdominal, dobraSuprailiaca,
                     dobraCoxaDireita, dobraCoxaEsquerda, aluno, professor);
-            if (operacao.equals("Incluir")) {
-                avaliacaoFisica.gravar();
-            }
-            if (operacao.equals("Editar")) {
-                avaliacaoFisica.editar();
-            }
+
             if (operacao.equals("Excluir")) {
                 avaliacaoFisica.excluir();
+            } else {
+                avaliacaoFisica.gravar();
             }
 
             RequestDispatcher view = request.getRequestDispatcher("PesquisaAvaliacaoFisicaController");
             view.forward(request, response);
-        } catch (com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException ex) {
-            AvaliacaoFisica avaliacaoFisica;
-            if (!operacao.equals("Excluir")) {
-                Aluno aluno = Aluno.obterAluno(idAluno);
-                Professor professor = Professor.obterProfessor(idProfessor);
-                avaliacaoFisica = new AvaliacaoFisica(idAvaliacaoFisica, dataAvaliacao, dataReavaliacao, peso, altura, perimetroTorax,
-                        perimetroQuadril, perimetroAbdomen, perimetroCintura, perimetroAnteBracoDireito, perimetroAnteBracoEsquerdo,
-                        perimetroBracoDireito, perimetroBracoEsquerdo, perimetroCoxaDireita, perimetroCoxaEsquerda, perimetroPanturrilhaDireita,
-                        perimetroPanturrilhaEsquerda, dobraSubescapular, dobraTricipital, dobraPeitoral, dobraAbdominal, dobraSuprailiaca,
-                        dobraCoxaDireita, dobraCoxaEsquerda, aluno, professor);
-            } else {
-                avaliacaoFisica = AvaliacaoFisica.obterAvaliacaoFisica(idAvaliacaoFisica);
-            }
-
-            request.setAttribute("operacao", operacao);
-            request.setAttribute("professores", Professor.obterProfessores());
-            request.setAttribute("alunos", Aluno.obterAlunos());
-            request.setAttribute("avaliacaoFisica", avaliacaoFisica);
-            request.setAttribute("erro", "Erro: " + TraduzirExcecao.ex(ex.getMessage()));
-
-            RequestDispatcher view = request.getRequestDispatcher("/cadastrarAvaliacaoFisica.jsp");
-            view.forward(request, response);
-
-        } catch (ServletException | IOException | SQLException | ClassNotFoundException ex) {
+        } catch (ServletException | IOException ex) {
             Logger.getLogger(ManterAvaliacaoFisicaController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

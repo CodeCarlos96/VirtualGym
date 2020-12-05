@@ -5,7 +5,6 @@
  */
 package controller;
 
-import exception.TraduzirExcecao;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.text.ParseException;
@@ -19,6 +18,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import model.Aluno;
 import model.Endereco;
+import model.Usuario;
 
 /**
  *
@@ -56,7 +56,7 @@ public class ManterAlunoController extends HttpServlet {
             request.setAttribute("operacao", operacao);
 
             if (!operacao.equals("Incluir")) {
-                int idAluno = Integer.parseInt(request.getParameter("idAluno"));
+                Integer idAluno = Integer.parseInt(request.getParameter("idAluno"));
                 Aluno aluno = Aluno.obterAluno(idAluno);
                 request.setAttribute("aluno", aluno);
             }
@@ -120,7 +120,7 @@ public class ManterAlunoController extends HttpServlet {
     private void confirmarOperacao(HttpServletRequest request, HttpServletResponse response) throws SQLException, ParseException, ClassNotFoundException, ServletException, IOException {
         String operacao = request.getParameter("operacao");
 
-        int idAluno = Integer.parseInt(request.getParameter("txtIdAluno"));
+        Integer idAluno = operacao.equals("Incluir") ? null : Integer.parseInt(request.getParameter("idAluno"));
         String nome = request.getParameter("txtNome");
         String email = request.getParameter("txtEmail");
         String senha = request.getParameter("txtSenha");
@@ -133,6 +133,7 @@ public class ManterAlunoController extends HttpServlet {
 
         String status = operacao.equals("Excluir") ? "" : request.getParameter("optStatus");
         String responsavel = request.getParameter("txtResponsavel");
+        String cpfResponsavel = request.getParameter("txtCpfResponsavel");
         String telefone = request.getParameter("txtTelefone");
 
         String logradouro = request.getParameter("txtLogradouro");
@@ -144,45 +145,24 @@ public class ManterAlunoController extends HttpServlet {
         String numero = request.getParameter("txtNumero");
 
         try {
-            Endereco endereco = new Endereco(idAluno, logradouro, bairro, cidade, uf, cep, complemento, numero);
-            Aluno aluno = new Aluno(idAluno, responsavel, idAluno, email, senha, nome, cpf, rg, sexo, dataNascimento, status, telefone, endereco) {
-            };
-            if (operacao.equals("Incluir")) {
-                endereco.gravar();
-                aluno.gravar();
-            } else {
-                if (operacao.equals("Editar")) {
-                    aluno.editar();
-                    endereco.editar();
-                }
-                if (operacao.equals("Excluir")) {
-                    aluno.excluir();
-                    endereco.excluir();
-                }
+            Integer idEndereco = null;
+            Integer idUsuario = null;
+
+            if (!operacao.equals("Incluir")) {
+                Aluno alunoFind = Aluno.obterAluno(idAluno);
+                idUsuario = alunoFind.getUsuario().getIdUsuario();
+                idEndereco = alunoFind.getUsuario().getEndereco().getIdEndereco();
             }
+
+            Endereco endereco = new Endereco(idEndereco, logradouro, bairro, cidade, uf, cep, complemento, numero);
+            Usuario usuario = new Usuario(idUsuario, email, senha, nome, cpf, rg, sexo, dataNascimento, status, telefone, endereco);
+            Aluno aluno = new Aluno(idAluno, responsavel, cpfResponsavel, usuario);
+
+            aluno = operacao.equals("Excluir") ? aluno.excluir() : aluno.gravar();
+
             RequestDispatcher view = request.getRequestDispatcher("PesquisaAlunoController");
             view.forward(request, response);
-        } catch (com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException ex) {
-            Aluno aluno;
-            if (!operacao.equals("Excluir")) {
-                Endereco endereco = new Endereco(idAluno, logradouro, bairro, cidade, uf, cep, complemento, numero);
-                if (operacao.equals("Incluir") && Aluno.obterUsuario(idAluno) == null) {
-                    endereco.excluir();
-                }
-                aluno = new Aluno(idAluno, responsavel, idAluno, email, senha, nome, cpf, rg, sexo, dataNascimento, status, telefone, endereco) {
-                };
-            } else {
-                aluno = Aluno.obterAluno(idAluno);
-            }
-
-            request.setAttribute("operacao", operacao);
-            request.setAttribute("aluno", aluno);
-            request.setAttribute("erro", "Erro: " + TraduzirExcecao.ex(ex.getMessage()));
-
-            RequestDispatcher view = request.getRequestDispatcher("/cadastrarAluno.jsp");
-            view.forward(request, response);
-
-        } catch (ServletException | IOException | SQLException | ClassNotFoundException ex) {
+        } catch (ServletException | IOException ex) {
             Logger.getLogger(ManterAlunoController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

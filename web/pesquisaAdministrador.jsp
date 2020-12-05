@@ -7,13 +7,13 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>JSP Page</title>
+        <title>Virtual Gym - Administradores</title>
     </head>
     <body>
         <form>
             <button type="submit" formaction="index.jsp">Menu</button>
         </form>
-        <h1>Pesquisa de Administradores</h1>
+        <h1>Administradores</h1>
         <table border=1>
             <tr>
                 <th>Código</th>
@@ -25,9 +25,9 @@
             <c:forEach items="${administradores}" var="administrador">
                 <tr>
                     <td><c:out value="${administrador.idAdministrador}" /></td>
-                    <td><c:out value="${administrador.nome}" /></td>
+                    <td><c:out value="${administrador.usuario.nome}" /></td>
                     <td><c:out value="${administrador.dataAdmissao}" /></td>
-                    <td><c:out value="${administrador.status}" /></td>
+                    <td><c:out value="${administrador.usuario.status}" /></td>
                     <td><a href="ManterAdministradorController?acao=prepararOperacao&operacao=Editar&idAdministrador=<c:out value="${administrador.idAdministrador}"/>">Editar</a></td>
                     <td><a href="ManterAdministradorController?acao=prepararOperacao&operacao=Excluir&idAdministrador=<c:out value="${administrador.idAdministrador}"/>">Excluir</a></td>
                 </tr>

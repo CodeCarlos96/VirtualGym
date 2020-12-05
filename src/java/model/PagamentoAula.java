@@ -1,67 +1,75 @@
 package model;
 
 import dao.PagamentoAulaDAO;
-import java.sql.SQLException;
-import java.util.Date;
+import java.io.Serializable;
 import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
 
-public class PagamentoAula extends Pagamento {
-    private int idPagamentoAula;
-    
+@Entity
+@Table(name = "PagamentoAula")
+public class PagamentoAula implements Serializable {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer idPagamentoAula;
+
+    @ManyToOne
     private MatriculaAula matriculaAula;
-    private int idMatriculaAula;
+    @OneToOne
+    private Pagamento pagamento;
 
-    public PagamentoAula(int idPagamentoAula, MatriculaAula matriculaAula, int idPagamento, int tipoPagamento, int parcelas, float valorPagamento, Date dataPagamento) {
-        super(idPagamento, tipoPagamento, parcelas, valorPagamento, dataPagamento);
-        this.idPagamentoAula = idPagamentoAula;
-        this.matriculaAula = matriculaAula;
+    public PagamentoAula() {
     }
 
-    public int getIdPagamentoAula() {
+    public PagamentoAula(Integer idPagamentoAula, MatriculaAula matriculaAula, Pagamento pagamento) {
+        this.idPagamentoAula = idPagamentoAula;
+        this.matriculaAula = matriculaAula;
+        this.pagamento = pagamento;
+    }
+
+    public Integer getIdPagamentoAula() {
         return idPagamentoAula;
     }
 
-    public void setIdPagamentoAula(int idPagamentoAula) {
+    public void setIdPagamentoAula(Integer idPagamentoAula) {
         this.idPagamentoAula = idPagamentoAula;
     }
 
-    public MatriculaAula getMatriculaAula() throws ClassNotFoundException, SQLException {
-        if ((this.getIdMatriculaAula() != 0) && (this.matriculaAula == null)) {
-            this.matriculaAula = MatriculaAula.obterMatriculaAula(this.idMatriculaAula);
-        }
-        return this.matriculaAula;
+    public MatriculaAula getMatriculaAula() {
+        return matriculaAula;
     }
 
     public void setMatriculaAula(MatriculaAula matriculaAula) {
         this.matriculaAula = matriculaAula;
     }
 
-    public int getIdMatriculaAula() {
-        return idMatriculaAula;
+    public Pagamento getPagamento() {
+        return pagamento;
     }
 
-    public void setIdMatriculaAula(int idMatriculaAula) {
-        this.idMatriculaAula = idMatriculaAula;
+    public void setPagamento(Pagamento pagamento) {
+        this.pagamento = pagamento;
     }
 
-    public static PagamentoAula obterPagamentoAula(int idPagamentoAula) throws ClassNotFoundException, SQLException{
-        return PagamentoAulaDAO.obterPagamentoAula(idPagamentoAula);
+    public static PagamentoAula obterPagamentoAula(Integer idPagamentoAula) {
+        return PagamentoAulaDAO.getInstancia().obterPagamentoAula(idPagamentoAula);
     }
-    
-    public static List<PagamentoAula> obterPagamentoAulas() throws ClassNotFoundException, SQLException{
-        return PagamentoAulaDAO.obterPagamentoAulas();
+
+    public static List<PagamentoAula> obterPagamentoAulas() {
+        return PagamentoAulaDAO.getInstancia().obterPagamentoAulas();
     }
-    
-    @Override
-    public void gravar() throws SQLException, ClassNotFoundException{
-        PagamentoAulaDAO.gravar(this);
+
+    public PagamentoAula gravar() {
+        return PagamentoAulaDAO.getInstancia().gravar(this);
     }
-    
-    public void editar() throws SQLException, ClassNotFoundException{
-        PagamentoAulaDAO.editar(this);
-    }
-    
-    public void excluir() throws SQLException, ClassNotFoundException{
-        PagamentoAulaDAO.excluir(this);
+
+    public PagamentoAula excluir() {
+        return PagamentoAulaDAO.getInstancia().excluir(this.idPagamentoAula);
     }
 }

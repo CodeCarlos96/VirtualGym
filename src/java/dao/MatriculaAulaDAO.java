@@ -1,174 +1,127 @@
 package dao;
 
-import static dao.DAO.fecharConexao;
-import java.sql.Connection;
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Types;
-import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.EntityManager;
+import model.Aluno;
 import model.MatriculaAula;
+import model.Turma;
 
 public class MatriculaAulaDAO {
 
-    public static void gravar(MatriculaAula matriculaAula) throws SQLException, ClassNotFoundException {
-        Connection conexao = null;
-        PreparedStatement comando = null;
+    private static MatriculaAulaDAO instancia = new MatriculaAulaDAO();
 
-        try {
-            conexao = BD.getConexao();
-            comando = conexao.prepareStatement(
-                    "insert into MatriculaAula (idMatriculaAula, dataMatricula, diaVencimento, Aluno_idAluno, Turma_idTurma) values (?, ?, ?, ?, ?)"
-            );
-
-            comando.setInt(1, matriculaAula.getIdMatriculaAula());
-            comando.setDate(2, new java.sql.Date(matriculaAula.getDataMatricula().getTime()));
-            comando.setInt(3, matriculaAula.getDiaVencimento());
-
-            if (matriculaAula.getAluno() == null) {
-                comando.setNull(4, Types.INTEGER);
-            } else {
-                comando.setInt(4, matriculaAula.getAluno().getIdAluno());
-            }
-            if (matriculaAula.getTurma() == null) {
-                comando.setNull(5, Types.INTEGER);
-            } else {
-                comando.setInt(5, matriculaAula.getTurma().getIdTurma());
-            }
-
-            comando.executeUpdate();
-        } finally {
-            fecharConexao(conexao, comando);
-        }
+    private MatriculaAulaDAO() {
     }
 
-    public static void editar(MatriculaAula matriculaAula) throws SQLException, ClassNotFoundException {
-        Connection conexao = null;
-        PreparedStatement comando = null;
-
-        try {
-            conexao = BD.getConexao();
-            comando = conexao.prepareStatement(
-                    "update MatriculaAula set dataMatricula=?, diaVencimento=?, Aluno_idAluno=?, Turma_idTurma=? where idMatriculaAula=?"
-            );
-            comando.setDate(1, new java.sql.Date(matriculaAula.getDataMatricula().getTime()));
-            comando.setInt(2, matriculaAula.getDiaVencimento());
-
-            if (matriculaAula.getAluno() == null) {
-                comando.setNull(3, Types.INTEGER);
-            } else {
-                comando.setInt(3, matriculaAula.getAluno().getIdAluno());
-            }
-            if (matriculaAula.getTurma() == null) {
-                comando.setNull(4, Types.INTEGER);
-            } else {
-                comando.setInt(4, matriculaAula.getTurma().getIdTurma());
-            }
-            comando.setInt(5, matriculaAula.getIdMatriculaAula());
-
-            comando.executeUpdate();
-        } finally {
-            fecharConexao(conexao, comando);
-        }
+    public static MatriculaAulaDAO getInstancia() {
+        return instancia;
     }
 
-    public static void excluir(MatriculaAula matriculaAula) throws SQLException, ClassNotFoundException {
-        Connection conexao = null;
-        Statement comando = null;
-        String stringSQL;
+    public MatriculaAula gravar(MatriculaAula matriculaAula) {
+        EntityManager em = new ConexaoFactory().getConexao();
         try {
-            conexao = BD.getConexao();
-            comando = conexao.createStatement();
-            stringSQL = "delete from MatriculaAula where idMatriculaAula = " + matriculaAula.getIdMatriculaAula();
-            comando.execute(stringSQL);
+            em.getTransaction().begin();
+            if (matriculaAula.getIdMatriculaAula() == null) {
+                em.persist(matriculaAula);
+            } else {
+                em.merge(matriculaAula);
+            }
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+            System.err.println(e);
         } finally {
-            fecharConexao(conexao, comando);
+            em.close();
         }
+        return matriculaAula;
     }
 
-    public static List<MatriculaAula> obterMatriculasAula()
-            throws ClassNotFoundException, SQLException {
-        Connection conexao = null;
-        Statement comando = null;
-        List<MatriculaAula> matriculaAulas = new ArrayList<MatriculaAula>();
+    public MatriculaAula excluir(Integer idMatriculaAula) {
+        EntityManager em = new ConexaoFactory().getConexao();
         MatriculaAula matriculaAula = null;
         try {
-            conexao = BD.getConexao();
-            comando = conexao.createStatement();
-            ResultSet rs = comando.executeQuery("select * from MatriculaAula");
-            while (rs.next()) {
-                matriculaAula = instanciarMatriculaAula(rs);
-                matriculaAulas.add(matriculaAula);
-            }
+            matriculaAula = em.find(MatriculaAula.class, idMatriculaAula);
+            em.getTransaction().begin();
+            em.remove(matriculaAula);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+            System.err.println(e);
         } finally {
-            fecharConexao(conexao, comando);
+            em.close();
+        }
+        return matriculaAula;
+    }
+    
+    public void excluirMatriculaTurma(Turma turma, EntityManager em) throws Exception {
+        try {
+            em.createQuery(
+                    "DELETE FROM MatriculaAula m WHERE m.turma = :turma")
+                    .setParameter("turma", turma)
+                    .executeUpdate();
+        } catch (Exception e) {
+            System.err.println(e);
+        }
+    }
+
+    public MatriculaAula obterMatriculaAula(Integer idMatriculaAula) {
+        EntityManager em = new ConexaoFactory().getConexao();
+        MatriculaAula matriculaAula = null;
+        try {
+            matriculaAula = em.find(MatriculaAula.class, idMatriculaAula);
+        } catch (Exception e) {
+            System.err.println(e);
+        } finally {
+            em.close();
+        }
+        return matriculaAula;
+    }
+
+    public List<MatriculaAula> obterMatriculaAulas() {
+        EntityManager em = new ConexaoFactory().getConexao();
+        List<MatriculaAula> matriculaAulas = null;
+        try {
+            matriculaAulas = em.createQuery("from MatriculaAula t").getResultList();
+        } catch (Exception e) {
+            System.err.println(e);
+        } finally {
+            em.close();
         }
         return matriculaAulas;
     }
 
-    public static MatriculaAula obterMatriculaAula(int idMatriculaAula) throws ClassNotFoundException, SQLException {
-        Connection conexao = null;
-        Statement comando = null;
-        MatriculaAula matriculaAula = null;
+    public static int getMatriculados(Integer idTurma) {
+        EntityManager em = new ConexaoFactory().getConexao();
+        long matriculados = 0;
         try {
-            conexao = BD.getConexao();
-            comando = conexao.createStatement();
-            ResultSet rs = comando.executeQuery("select * from matriculaAula where idMatriculaAula = " + idMatriculaAula);
-            rs.first();
-            matriculaAula = instanciarMatriculaAula(rs);
+            matriculados = (long) em.createQuery(
+                    "SELECT COUNT(m) FROM MatriculaAula m WHERE m.turma = :turma")
+                    .setParameter("turma", Turma.obterTurma(idTurma))
+                    .getSingleResult();
+        } catch (Exception e) {
+            System.err.println(e);
         } finally {
-            fecharConexao(conexao, comando);
+            em.close();
         }
-        return matriculaAula;
+        return Math.toIntExact(matriculados);
     }
 
-    public static int getMatriculados(int idTurma) throws ClassNotFoundException, SQLException {
-        Connection conexao = null;
-        Statement comando = null;
-        int matriculados;
+    public static boolean matriculado(Integer idAluno, Integer idTurma) {
+        EntityManager em = new ConexaoFactory().getConexao();
+        long matriculado = 0;
         try {
-            conexao = BD.getConexao();
-            comando = conexao.createStatement();
-            ResultSet rs = comando.executeQuery("select count(idMatriculaAula) from MatriculaAula where Turma_idTurma = " + idTurma);
-            rs.first();
-            matriculados = rs.getInt(1);
+            matriculado = (long) em.createQuery(
+                    "SELECT COUNT(m) FROM MatriculaAula m WHERE m.aluno = :aluno"
+                    + " and m.turma = :turma")
+                    .setParameter("aluno", Aluno.obterAluno(idAluno))
+                    .setParameter("turma", Turma.obterTurma(idTurma))
+                    .getSingleResult();
+        } catch (Exception e) {
+            System.err.println(e);
         } finally {
-            fecharConexao(conexao, comando);
+            em.close();
         }
-        return matriculados;
+        return Math.toIntExact(matriculado) > 0;
     }
 
-    public static boolean matriculado(int idAluno, int idTurma) throws SQLException, ClassNotFoundException {
-        Connection conexao = null;
-        Statement comando = null;
-        boolean matriculado;
-        try {
-            conexao = BD.getConexao();
-            comando = conexao.createStatement();
-            ResultSet rs = comando.executeQuery("select count(idMatriculaAula) from MatriculaAula where Aluno_idAluno=" + idAluno + " and Turma_idTurma=" + idTurma);
-            rs.first();
-            matriculado = rs.getBoolean(1);
-        } finally {
-            fecharConexao(conexao, comando);
-        }
-        return matriculado;
-    }
-
-    public static MatriculaAula instanciarMatriculaAula(ResultSet rs) throws SQLException {
-        MatriculaAula matriculaAula;
-        try {
-            matriculaAula = new MatriculaAula(rs.getInt("idMatriculaAula"),
-                    rs.getDate("dataMatricula"),
-                    rs.getInt("diaVencimento"), null, null);
-
-            matriculaAula.setIdAluno(rs.getInt("Aluno_idAluno"));
-            matriculaAula.setIdTurma(rs.getInt("Turma_idTurma"));
-        } catch (SQLException ex) {
-            matriculaAula = null;
-        }
-        return matriculaAula;
-    }
 }

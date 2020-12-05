@@ -1,9 +1,6 @@
 function validarFormulario(form) {
     var mensagem;
     mensagem = "";
-    if (form.txtIdAvaliacaoFisica.value == "") {
-        mensagem = mensagem + "Informe o Código da Avaliação Fisica\n";
-    }
     if (form.txtDataAvaliacao.value == "") {
         mensagem = mensagem + "Informe a Data da Avaliação\n";
     }

@@ -1,135 +1,79 @@
 package dao;
 
-import static dao.DAO.fecharConexao;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Types;
-import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.EntityManager;
 import model.PagamentoAula;
 
 public class PagamentoAulaDAO {
 
-    public static void gravar(PagamentoAula pagamentoAula) throws SQLException, ClassNotFoundException {
-        Connection conexao = null;
-        PreparedStatement comando = null;
+    private static PagamentoAulaDAO instancia = new PagamentoAulaDAO();
 
+    private PagamentoAulaDAO() {
+    }
+
+    public static PagamentoAulaDAO getInstancia() {
+        return instancia;
+    }
+
+    public PagamentoAula gravar(PagamentoAula pagamentoAula) {
+        EntityManager em = new ConexaoFactory().getConexao();
         try {
-            conexao = BD.getConexao();
-            comando = conexao.prepareStatement(
-                    "insert into PagamentoAula (idPagamentoAula, Pagamento_idPagamento, MatriculaAula_idMatriculaAula)"
-                    + " values (?, ?, ?)"
-            );
-            comando.setInt(1, pagamentoAula.getIdPagamentoAula());
-            comando.setInt(2, pagamentoAula.getIdPagamento());
-
-            if (pagamentoAula.getMatriculaAula() == null) {
-                comando.setNull(3, Types.INTEGER);
+            em.getTransaction().begin();
+            if (pagamentoAula.getIdPagamentoAula() == null) {
+                em.persist(pagamentoAula);
             } else {
-                comando.setInt(3, pagamentoAula.getMatriculaAula().getIdMatriculaAula());
+                em.merge(pagamentoAula);
             }
-
-            comando.executeUpdate();
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+            System.err.println(e);
         } finally {
-            fecharConexao(conexao, comando);
-        }
-    }
-    
-    public static void editar(PagamentoAula pagamentoAula) throws SQLException, ClassNotFoundException {
-        Connection conexao = null;
-        PreparedStatement comando = null;
-
-        try {
-            conexao = BD.getConexao();
-            comando = conexao.prepareStatement(
-                    "update PagamentoAula set Pagamento_idPagamento=?, MatriculaAula_idMatriculaAula=? where idPagamentoAula=?"
-            );
-            comando.setInt(1, pagamentoAula.getIdPagamento());
-
-            if (pagamentoAula.getMatriculaAula() == null) {
-                comando.setNull(2, Types.INTEGER);
-            } else {
-                comando.setInt(2, pagamentoAula.getMatriculaAula().getIdMatriculaAula());
-            }
-            comando.setInt(3, pagamentoAula.getIdPagamentoAula());
-
-            comando.executeUpdate();
-        } finally {
-            fecharConexao(conexao, comando);
-        }
-    }
-
-    public static void excluir(PagamentoAula pagamentoAula) throws SQLException, ClassNotFoundException {
-        Connection conexao = null;
-        Statement comando = null;
-        String stringSQL;
-        try {
-            conexao = BD.getConexao();
-            comando = conexao.createStatement();
-            
-            stringSQL = "delete from PagamentoAula where idPagamentoAula = " + pagamentoAula.getIdPagamentoAula();
-            comando.execute(stringSQL);
-            
-            stringSQL = "delete from Pagamento where idPagamento = " + pagamentoAula.getIdPagamento();
-            comando.execute(stringSQL);
-        } finally {
-            fecharConexao(conexao, comando);
-        }
-    }
-
-    public static PagamentoAula obterPagamentoAula(int idPagamentoAula) throws ClassNotFoundException, SQLException {
-        Connection conexao = null;
-        Statement comando = null;
-        PagamentoAula pagamentoAula = null;
-        try {
-            conexao = BD.getConexao();
-            comando = conexao.createStatement();
-            ResultSet rs = comando.executeQuery("select * from pagamentoAula"
-                    + " join pagamento on pagamentoAula.Pagamento_idPagamento = pagamento.idPagamento where idPagamentoAula = " + idPagamentoAula);
-            rs.first();
-            pagamentoAula = instanciarPagamentoAula(rs);
-        } finally {
-            fecharConexao(conexao, comando);
+            em.close();
         }
         return pagamentoAula;
     }
 
-    public static List<PagamentoAula> obterPagamentoAulas()
-            throws ClassNotFoundException, SQLException {
-        Connection conexao = null;
-        Statement comando = null;
-        List<PagamentoAula> pagamentoAulas = new ArrayList<PagamentoAula>();
+    public PagamentoAula excluir(Integer idPagamentoAula) {
+        EntityManager em = new ConexaoFactory().getConexao();
         PagamentoAula pagamentoAula = null;
         try {
-            conexao = BD.getConexao();
-            comando = conexao.createStatement();
-            ResultSet rs = comando.executeQuery("select * from PagamentoAula"
-                    + " join pagamento on pagamentoAula.Pagamento_idPagamento = pagamento.idPagamento");
-            while (rs.next()) {
-                pagamentoAula = instanciarPagamentoAula(rs);
-                pagamentoAulas.add(pagamentoAula);
-            }
+            pagamentoAula = em.find(PagamentoAula.class, idPagamentoAula);
+            em.getTransaction().begin();
+            em.remove(pagamentoAula);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+            System.err.println(e);
         } finally {
-            fecharConexao(conexao, comando);
+            em.close();
+        }
+        return pagamentoAula;
+    }
+
+    public PagamentoAula obterPagamentoAula(Integer idPagamentoAula) {
+        EntityManager em = new ConexaoFactory().getConexao();
+        PagamentoAula pagamentoAula = null;
+        try {
+            pagamentoAula = em.find(PagamentoAula.class, idPagamentoAula);
+        } catch (Exception e) {
+            System.err.println(e);
+        } finally {
+            em.close();
+        }
+        return pagamentoAula;
+    }
+
+    public List<PagamentoAula> obterPagamentoAulas() {
+        EntityManager em = new ConexaoFactory().getConexao();
+        List<PagamentoAula> pagamentoAulas = null;
+        try {
+            pagamentoAulas = em.createQuery("from PagamentoAula t").getResultList();
+        } catch (Exception e) {
+            System.err.println(e);
+        } finally {
+            em.close();
         }
         return pagamentoAulas;
-    }
-
-    public static PagamentoAula instanciarPagamentoAula(ResultSet rs) throws SQLException {
-        PagamentoAula pagamentoAula = new PagamentoAula(rs.getInt("idPagamentoAula"),
-                null,
-                rs.getInt("idPagamento"),
-                rs.getInt("tipoPagamento"),
-                rs.getInt("parcelas"),
-                rs.getFloat("valorPagamento"),
-                rs.getDate("dataPagamento")) {
-        };
-
-        pagamentoAula.setIdMatriculaAula(rs.getInt("MatriculaAula_idMatriculaAula"));
-
-        return pagamentoAula;
     }
 }

@@ -1,121 +1,80 @@
 package dao;
 
-import static dao.DAO.fecharConexao;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.EntityManager;
 import model.Sala;
 
 public class SalaDAO {
 
-    public static void gravar(Sala sala) throws SQLException, ClassNotFoundException {
-        Connection conexao = null;
-        PreparedStatement comando = null;
+    private static SalaDAO instancia = new SalaDAO();
 
-        try {
-            conexao = BD.getConexao();
-            comando = conexao.prepareStatement(
-                    "insert into sala (idSala, capacidade, descricao, nome) values (?, ?, ?, ?)"
-            );
-            comando.setInt(1, sala.getIdSala());
-            comando.setInt(2, sala.getCapacidade());
-            comando.setString(3, sala.getDescricao());
-            comando.setString(4, sala.getNome());
-
-            comando.executeUpdate();
-        } finally {
-            fecharConexao(conexao, comando);
-        }
-
+    private SalaDAO() {
     }
 
-    public static void editar(Sala sala) throws SQLException, ClassNotFoundException {
-        Connection conexao = null;
-        PreparedStatement comando = null;
-
-        try {
-            conexao = BD.getConexao();
-            comando = conexao.prepareStatement(
-                    "update sala set capacidade=?, descricao=?, nome=? where idSala=?"
-            );
-            comando.setInt(1, sala.getCapacidade());
-            comando.setString(2, sala.getDescricao());
-            comando.setString(3, sala.getNome());
-            comando.setInt(4, sala.getIdSala());
-
-            comando.executeUpdate();
-        } finally {
-            fecharConexao(conexao, comando);
-        }
-
+    public static SalaDAO getInstancia() {
+        return instancia;
     }
 
-    public static void excluir(Sala sala) throws SQLException, ClassNotFoundException {
-        Connection conexao = null;
-        Statement comando = null;
-        String stringSQL;
+    public Sala gravar(Sala sala) {
+        EntityManager em = new ConexaoFactory().getConexao();
         try {
-            conexao = BD.getConexao();
-            comando = conexao.createStatement();
-            stringSQL = "delete from sala where idSala = " + sala.getIdSala();
-            comando.execute(stringSQL);
-
+            em.getTransaction().begin();
+            if (sala.getIdSala() == null) {
+                em.persist(sala); 
+            } else {
+                em.merge(sala);
+            }
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+            System.err.println(e);
         } finally {
-            fecharConexao(conexao, comando);
+            em.close();
         }
+        return sala;
     }
 
-    public static List<Sala> obterSalas()
-            throws ClassNotFoundException, SQLException {
-        Connection conexao = null;
-        Statement comando = null;
-        List<Sala> salas = new ArrayList<Sala>();
+    public Sala excluir(Integer idSala) {
+        EntityManager em = new ConexaoFactory().getConexao();
         Sala sala = null;
         try {
-            conexao = BD.getConexao();
-            comando = conexao.createStatement();
-            ResultSet rs = comando.executeQuery("select * from sala order by nome");
-            while (rs.next()) {
-                sala = instanciarSala(rs);
-                salas.add(sala);
-            }
+            sala = em.find(Sala.class, idSala);
+            em.getTransaction().begin();
+            em.remove(sala);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+            System.err.println(e);
         } finally {
-            fecharConexao(conexao, comando);
+            em.close();
+        }
+        return sala;
+    }
+
+    public Sala obterSala(Integer idSala) {
+        EntityManager em = new ConexaoFactory().getConexao();
+        Sala sala = null;
+        try {
+            sala = em.find(Sala.class, idSala);
+        } catch (Exception e) {
+            System.err.println(e);
+        } finally {
+            em.close();
+        }
+        return sala;
+    }
+
+    public List<Sala> obterSalas() {
+        EntityManager em = new ConexaoFactory().getConexao();
+        List<Sala> salas = null;
+        try {
+            salas = em.createQuery("from Sala s").getResultList();
+        } catch (Exception e) {
+            System.err.println(e);
+        } finally {
+            em.close();
         }
         return salas;
-    }
-
-    public static Sala obterSala(int idSala) throws ClassNotFoundException, SQLException {
-        Connection conexao = null;
-        Statement comando = null;
-        Sala sala = null;
-        try {
-            conexao = BD.getConexao();
-            comando = conexao.createStatement();
-            ResultSet rs = comando.executeQuery("select * from sala where idSala = " + idSala);
-            rs.first();
-            sala = instanciarSala(rs);
-        } finally {
-            fecharConexao(conexao, comando);
-        }
-        return sala;
-    }
-
-    public static Sala instanciarSala(ResultSet rs) throws SQLException {
-        Sala sala;
-        try {
-            sala = new Sala(rs.getInt("idSala"),
-                    rs.getInt("capacidade"),
-                    rs.getString("descricao"),
-                    rs.getString("nome"));
-        } catch (SQLException ex) {
-            sala = null;
-        }
-        return sala;
     }
 
 }

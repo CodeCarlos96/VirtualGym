@@ -1,117 +1,89 @@
 package model;
 
 import dao.TurmaDAO;
-import java.sql.SQLException;
+import java.io.Serializable;
 import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
-public class Turma {
+@Entity
+@Table(name = "Turma")
+public class Turma implements Serializable {
 
-    private int idTurma;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer idTurma;
 
+    @ManyToOne
     private Professor professor;
-    private int idProfessor;
+    @ManyToOne
     private Sala sala;
-    private int idSala;
+    @ManyToOne
     private Aula aula;
-    private int idAula;
 
-    public Turma(int idTurma, Professor professor, Sala sala, Aula aula) {
+    public Turma() {
+    }
+
+    public Turma(Integer idTurma, Professor professor, Sala sala, Aula aula) {
         this.idTurma = idTurma;
         this.professor = professor;
         this.sala = sala;
         this.aula = aula;
     }
 
-    public int getIdTurma() {
+    public Integer getIdTurma() {
         return idTurma;
     }
 
-    public void setIdTurma(int idTurma) {
+    public void setIdTurma(Integer idTurma) {
         this.idTurma = idTurma;
     }
 
-    public int getIdProfessor() {
-        return idProfessor;
-    }
-
-    public void setIdProfessor(int idProfessor) {
-        this.idProfessor = idProfessor;
-    }
-
-    public int getIdSala() {
-        return idSala;
-    }
-
-    public void setIdSala(int idSala) {
-        this.idSala = idSala;
-    }
-
-    public int getIdAula() {
-        return idAula;
-    }
-
-    public void setIdAula(int idAula) {
-        this.idAula = idAula;
-    }
-
-    public Professor getProfessor() throws ClassNotFoundException, SQLException {
-        if ((this.getIdProfessor() != 0) && (this.professor == null)) {
-            this.professor = Professor.obterProfessor(this.idProfessor);
-        }
-        return this.professor;
+    public Professor getProfessor() {
+        return professor;
     }
 
     public void setProfessor(Professor professor) {
         this.professor = professor;
     }
 
-    public Sala getSala() throws ClassNotFoundException, SQLException {
-        if ((this.getIdSala() != 0) && (this.sala == null)) {
-            this.sala = Sala.obterSala(this.idSala);
-        }
-        return this.sala;
+    public Sala getSala() {
+        return sala;
     }
 
     public void setSala(Sala sala) {
         this.sala = sala;
     }
 
-    public Aula getAula() throws ClassNotFoundException, SQLException {
-        if ((this.getIdAula() != 0) && (this.aula == null)) {
-            this.aula = Aula.obterAula(this.idAula);
-        }
-        return this.aula;
+    public Aula getAula() {
+        return aula;
     }
 
     public void setAula(Aula aula) {
         this.aula = aula;
     }
 
-    public int getMatriculados() throws ClassNotFoundException, SQLException {
+    public int getMatriculados() {
         return MatriculaAula.getMatriculados(this.idTurma);
     }
 
-    public static Turma obterTurma(int idTurma) throws ClassNotFoundException, SQLException {
-        return TurmaDAO.obterTurma(idTurma);
+    public static Turma obterTurma(Integer idTurma) {
+        return TurmaDAO.getInstancia().obterTurma(idTurma);
     }
 
-    public static List<Turma> obterTurmas() throws ClassNotFoundException, SQLException {
-        return TurmaDAO.obterTurmas();
+    public static List<Turma> obterTurmas() {
+        return TurmaDAO.getInstancia().obterTurmas();
     }
 
-    public static List<Turma> obterTurmasDisponiveis() throws ClassNotFoundException, SQLException {
-        return TurmaDAO.obterTurmasDisponiveis();
+    public Turma gravar() {
+        return TurmaDAO.getInstancia().gravar(this);
     }
 
-    public void gravar() throws SQLException, ClassNotFoundException {
-        TurmaDAO.gravar(this);
-    }
-
-    public void editar() throws SQLException, ClassNotFoundException {
-        TurmaDAO.editar(this);
-    }
-
-    public void excluir() throws SQLException, ClassNotFoundException {
-        TurmaDAO.excluir(this);
+    public Turma excluir() {
+        return TurmaDAO.getInstancia().excluir(this.idTurma);
     }
 }

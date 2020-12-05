@@ -1,34 +1,42 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package model;
 
 import dao.AlunoDAO;
-import java.sql.SQLException;
-import java.util.Date;
+import java.io.Serializable;
 import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
 
-/**
- *
- * @author Aluno
- */
-public class Aluno extends Usuario {
-    private int idAluno;
+@Entity
+@Table(name = "Aluno")
+public class Aluno implements Serializable {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer idAluno;
     private String responsavel;
+    private String cpfResponsavel;
+    @OneToOne
+    private Usuario usuario;
 
-    public Aluno(int idAluno, String responsavel, int idUsuario, String email, String senha, String nome, String cpf, String rg, String sexo, Date dataNascimento, String status, String telefone, Endereco endereco) {
-        super(idUsuario, email, senha, nome, cpf, rg, sexo, dataNascimento, status, telefone, endereco);
-        this.idAluno = idAluno;
-        this.responsavel = responsavel;
+    public Aluno() {
     }
 
-    public int getIdAluno() {
+    public Aluno(Integer idAluno, String responsavel, String cpfResponsavel, Usuario usuario) {
+        this.idAluno = idAluno;
+        this.responsavel = responsavel;
+        this.cpfResponsavel = cpfResponsavel;
+        this.usuario = usuario;
+    }
+
+    public Integer getIdAluno() {
         return idAluno;
     }
 
-    public void setIdAluno(int idAluno) {
+    public void setIdAluno(Integer idAluno) {
         this.idAluno = idAluno;
     }
 
@@ -40,25 +48,39 @@ public class Aluno extends Usuario {
         this.responsavel = responsavel;
     }
 
-    public static Aluno obterAluno(int idAluno) throws ClassNotFoundException, SQLException {
-        return AlunoDAO.obterAluno(idAluno);
+    public String getCpfResponsavel() {
+        return cpfResponsavel;
     }
 
-    public static List<Aluno> obterAlunos() throws ClassNotFoundException, SQLException {
-        return AlunoDAO.obterAlunos();
-    }
-    
-    @Override
-    public void gravar() throws SQLException, ClassNotFoundException{
-        AlunoDAO.gravar(this);
-    }
-    
-    @Override
-    public void editar() throws SQLException, ClassNotFoundException{
-        AlunoDAO.editar(this);
+    public void setCpfResponsavel(String cpfResponsavel) {
+        this.cpfResponsavel = cpfResponsavel;
     }
 
-    public void excluir() throws SQLException, ClassNotFoundException{
-        AlunoDAO.excluir(this);
+    public Usuario getUsuario() {
+        return usuario;
+    }
+
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
+    }
+
+    public static Aluno obterAluno(Integer idAluno) {
+        return AlunoDAO.getInstancia().obterAluno(idAluno);
+    }
+
+    public static List<Aluno> obterAlunos() {
+        return AlunoDAO.getInstancia().obterAlunos();
+    }
+
+    public static List<Aluno> obterAlunosNome(String nomeAluno) {
+        return AlunoDAO.getInstancia().obterAlunosNome(nomeAluno);
+    }
+
+    public Aluno gravar() {
+        return AlunoDAO.getInstancia().gravar(this);
+    }
+
+    public Aluno excluir() {
+        return AlunoDAO.getInstancia().excluir(this.idAluno);
     }
 }

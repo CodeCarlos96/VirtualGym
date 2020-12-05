@@ -7,13 +7,13 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>JSP Page</title>
+        <title>Virtual Gym - Matriculas</title>
     </head>
     <body>
         <form>
             <button type="submit" formaction="index.jsp">Menu</button>
         </form>
-        <h1>Pesquisa de Matriculas em Aulas</h1>
+        <h1>Matriculas em Aulas</h1>
 
         <table border=1>
             <tr>
@@ -27,7 +27,7 @@
                 <tr>
                     <td><c:out value="${matriculaAula.idMatriculaAula}" /></td>
                     <td><c:out value="${matriculaAula.dataMatricula}" /></td>
-                    <td><c:out value="${matriculaAula.aluno.nome}" /></td>
+                    <td><c:out value="${matriculaAula.aluno.usuario.nome}" /></td>
                     <td><c:out value="${matriculaAula.turma.aula.nome}" /></td>
                     <td><a href="ManterMatriculaAulaController?acao=prepararOperacao&operacao=Editar&idMatriculaAula=<c:out value="${matriculaAula.idMatriculaAula}"/>">Editar</a></td>
                     <td><a href="ManterMatriculaAulaController?acao=prepararOperacao&operacao=Excluir&idMatriculaAula=<c:out value="${matriculaAula.idMatriculaAula}"/>">Excluir</a></td>

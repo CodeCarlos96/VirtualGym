@@ -5,21 +5,17 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <script src="scripts/aula.js" charset="utf-8"></script>
-        <title>Virtual Gym</title>
+        <title>Virtual Gym - Cadastrar Aula</title>
     </head>
     <body>
         <a href="index.jsp"><button>Menu</button></a>
         <a href="PesquisaAulaController"><button>Voltar</button></a>
         <h1>${operacao} Aula</h1>
-        <form action="ManterAulaController?acao=confirmarOperacao&operacao=${operacao}" method="post" name="formManterAula" onsubmit="return validarFormulario(this)">
+        <form action="ManterAulaController?acao=confirmarOperacao&operacao=${operacao}&idAula=${aula.idAula}" method="post" name="formManterAula" onsubmit="return validarFormulario(this)">
             <span id="erro" style="color: red">${erro}</span>
             <table>
                 <tr>
-                    <td>Código: </td> <td><input type="number" name="txtIdAula" min="1" value="${aula.idAula}" <c:if test="${operacao != 'Incluir'}"> readonly </c:if>></td>
-                    </tr>
-                    <tr>
-                        <td>Nome: </td> <td><input type="text" name="txtNome" maxlength="20" value="${aula.nome}" <c:if test="${operacao == 'Excluir'}"> readonly </c:if>></td>
+                    <td>Nome: </td> <td><input type="text" name="txtNome" maxlength="20" value="${aula.nome}" <c:if test="${operacao == 'Excluir'}"> readonly </c:if>></td>
                     </tr>
                     <tr>
                         <td>Descrição: </td> <td><textarea rows="3" cols="20" name="txtDescricaoAula" maxlength="100" <c:if test="${operacao == 'Excluir'}"> readonly </c:if>>${aula.descricao}</textarea></td>
@@ -29,9 +25,10 @@
                     </tr>
                     <tr>
                         <td>Taxa de Juros (%): </td> <td><input type="number" step="0.01" name="txtTaxaJuros" min="0" value="${aula.taxaJuros}" <c:if test="${operacao == 'Excluir'}"> readonly </c:if>></td>
-                    </tr>
-                </table>
-                <input type="submit" name="btnConfirmar" value="Confirmar">
+                </tr>
+            </table>
+            <input type="submit" name="btnConfirmar" value="Confirmar">
         </form>
+        <script src="scripts/aula.js" charset="utf-8"></script>
     </body>
 </html>
